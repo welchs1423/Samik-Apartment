@@ -1,0 +1,67 @@
+[
+  {
+    "id": 1,
+    "name": "Old Fashioned",
+    "base": "Whiskey",
+    "description": "클래식 중의 클래식. 버번의 묵직한 단맛 위로 비터스가 부드럽게 균형을 잡아줍니다.",
+    "ingredients": [
+      "Bourbon 60ml",
+      "Angostura Bitters 2 dashes",
+      "Sugar Cube 1",
+      "Orange Peel"
+    ],
+    "tags": ["Classic", "Strong", "Bitter-Sweet"]
+  },
+  {
+    "id": 2,
+    "name": "Negroni",
+    "base": "Gin",
+    "description": "드라이 진, 스위트 버무스, 캄파리가 만나는 이탈리아 스피릿. 쌉쌀하고 향긋합니다.",
+    "ingredients": [
+      "Gin 30ml",
+      "Sweet Vermouth 30ml",
+      "Campari 30ml",
+      "Orange Peel"
+    ],
+    "tags": ["Bitter", "Aromatic", "Aperitif"]
+  },
+  {
+    "id": 3,
+    "name": "Paper Plane",
+    "base": "Whiskey",
+    "description": "네 가지 재료가 완벽한 비율로 만나는 현대의 클래식. 새콤달콤하며 복잡한 여운이 길게 이어집니다.",
+    "ingredients": [
+      "Bourbon 22.5ml",
+      "Aperol 22.5ml",
+      "Amaro Nonino 22.5ml",
+      "Fresh Lemon Juice 22.5ml"
+    ],
+    "tags": ["Sour", "Balanced", "Modern Classic"]
+  },
+  {
+    "id": 4,
+    "name": "Gimlet",
+    "base": "Gin",
+    "description": "진의 식물성 향과 라임의 상쾌한 신맛이 어우러진 단순하고 깔끔한 한 잔.",
+    "ingredients": [
+      "Gin 60ml",
+      "Fresh Lime Juice 22.5ml",
+      "Simple Syrup 15ml"
+    ],
+    "tags": ["Sour", "Refreshing", "Clean"]
+  },
+  {
+    "id": 5,
+    "name": "Mezcal Sour",
+    "base": "Mezcal",
+    "description": "스모키한 메스칼의 깊은 향에 시트러스의 산미가 더해집니다. 달걀 흰자가 부드러운 거품을 완성합니다.",
+    "ingredients": [
+      "Mezcal 50ml",
+      "Fresh Lemon Juice 25ml",
+      "Agave Syrup 15ml",
+      "Egg White 1",
+      "Angostura Bitters (garnish)"
+    ],
+    "tags": ["Smoky", "Sour", "Velvety"]
+  }
+]
