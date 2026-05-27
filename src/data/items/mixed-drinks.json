@@ -1,0 +1,65 @@
+[
+  {
+    "id": "stoli-salad",
+    "name": "Stoli Salad",
+    "description": "Stoli Ohranj, Stoli Blueberi, Stoli Razberi, cranberry juice, pineapple juice.",
+    "price": "$7.50",
+    "image": null,
+    "ingredients": ["Stoli Ohranj", "Stoli Blueberi", "Stoli Razberi", "Cranberry juice", "Pineapple juice"],
+    "tags": ["Fruity", "Vodka"]
+  },
+  {
+    "id": "lemonade-salad",
+    "name": "Lemonade Salad",
+    "description": "Stoli Ohranj, Stoli Blueberi, Stoli Razberi, lemonade, red raspberries.",
+    "price": "$7.50",
+    "image": null,
+    "ingredients": ["Stoli Ohranj", "Stoli Blueberi", "Stoli Razberi", "Lemonade", "Red raspberries"],
+    "tags": ["Refreshing", "Vodka"]
+  },
+  {
+    "id": "3-rum-paradise",
+    "name": "3 Rum Paradise",
+    "description": "Captain Morgan, Bacardi Limon, Myer's Dark Rum, cranberry juice, pineapple juice.",
+    "price": "$7.50",
+    "image": null,
+    "ingredients": ["Captain Morgan", "Bacardi Limon", "Myer's Dark Rum", "Cranberry juice", "Pineapple juice"],
+    "tags": ["Tropical", "Rum", "Fruity"]
+  },
+  {
+    "id": "funky-monkey",
+    "name": "Funky Monkey",
+    "description": "Absolut Vodka, Tanqueray, Bacardi Silver, Jose Cuervo Gold, Triple Sec, Blue Curacao, sour mix.",
+    "price": "$7.50",
+    "image": null,
+    "ingredients": ["Absolut Vodka", "Tanqueray", "Bacardi Silver", "Jose Cuervo Gold", "Triple Sec", "Blue Curacao", "Sour mix"],
+    "tags": ["Strong", "Multi-spirit"]
+  },
+  {
+    "id": "electric-lemonade",
+    "name": "Electric Lemonade",
+    "description": "Hendrick's Gin, Grey Goose Vodka, splash of simple syrup, lemonade, fresh lemon juice.",
+    "price": "$8.50",
+    "image": null,
+    "ingredients": ["Hendrick's Gin", "Grey Goose Vodka", "Simple syrup", "Lemonade", "Fresh lemon juice"],
+    "tags": ["Refreshing", "Citrus"]
+  },
+  {
+    "id": "hail-mary",
+    "name": "Hail Mary",
+    "description": "Absolut Vodka, Sliders house made bloody mary mix, spicy green beans.",
+    "price": "$7.50",
+    "image": null,
+    "ingredients": ["Absolut Vodka", "House made bloody mary mix", "Spicy green beans"],
+    "tags": ["Savory", "Spicy", "Brunch"]
+  },
+  {
+    "id": "just-in-from-mexico",
+    "name": "Just In From Mexico",
+    "description": "Milagro Tequila Silver, lemon lime soda, fresh lemons, limes, & oranges with a splash of grapefruit juice.",
+    "price": "$8.50",
+    "image": null,
+    "ingredients": ["Milagro Tequila Silver", "Lemon lime soda", "Fresh lemons", "Fresh limes", "Oranges", "Grapefruit juice"],
+    "tags": ["Citrus", "Tequila", "Refreshing"]
+  }
+]

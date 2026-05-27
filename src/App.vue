@@ -1,7 +1,7 @@
 <template>
   <div id="app-root">
     <NavBar />
-    <main class="pt-16 flex-1 flex flex-col">
+    <main class="pt-16">
       <router-view />
     </main>
     <SiteFooter />

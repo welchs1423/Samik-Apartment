@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lato:wght@300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Dancing+Script:wght@600;700&family=Lato:wght@300;400&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -10,8 +10,15 @@
   --color-bar-cream-muted: #C8C2B8;
   --color-bar-border: #2E2823;
 
+  --color-parchment: #F8F4EC;
+  --color-parchment-dark: #EDE7D9;
+  --color-parchment-border: #D4C8B0;
+  --color-ink: #3C2E1E;
+  --color-ink-muted: #7A6248;
+
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Lato', system-ui, sans-serif;
+  --font-script: 'Dancing Script', cursive;
 }
 
 *, *::before, *::after {

@@ -1,0 +1,68 @@
+[
+  {
+    "id": "wines",
+    "name": "Wines",
+    "type": "wine",
+    "description": "By the glass & bottle",
+    "coverImage": null
+  },
+  {
+    "id": "sangria",
+    "name": "Sangria",
+    "type": "cocktail",
+    "description": "House-made sangrias",
+    "coverImage": null
+  },
+  {
+    "id": "bourbon-cocktails",
+    "name": "Bourbon Cocktails",
+    "type": "cocktail",
+    "description": "Southern spirit classics",
+    "coverImage": null
+  },
+  {
+    "id": "martinis",
+    "name": "Martini's",
+    "type": "cocktail",
+    "description": "Shaken or stirred",
+    "coverImage": null
+  },
+  {
+    "id": "mixed-drinks",
+    "name": "Mixed Drinks",
+    "type": "cocktail",
+    "description": "Creative combinations",
+    "coverImage": null
+  },
+  {
+    "id": "margarita",
+    "name": "Margarita",
+    "type": "cocktail",
+    "description": "Tequila-forward classics",
+    "coverImage": null
+  },
+  {
+    "id": "tequila",
+    "name": "Tequila",
+    "type": "spirit",
+    "description": "Agave spirits",
+    "coverImage": null,
+    "note": "All served neat or on the rocks"
+  },
+  {
+    "id": "bourbon",
+    "name": "Bourbon",
+    "type": "spirit",
+    "description": "American whiskey",
+    "coverImage": null,
+    "note": "All Bourbons & Ryes served with a king cube. Keeps your drink cold without watering down your beverage."
+  },
+  {
+    "id": "rye-whiskey",
+    "name": "Straight Rye Whiskey",
+    "type": "spirit",
+    "description": "Spicy American rye",
+    "coverImage": null,
+    "note": "All Bourbons & Ryes served with a king cube. Keeps your drink cold without watering down your beverage."
+  }
+]

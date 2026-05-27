@@ -1,0 +1,29 @@
+[
+  {
+    "id": "manhattan",
+    "name": "Manhattan",
+    "description": "Michter's Kentucky Bourbon, sweet vermouth, bitters, maraschino cherry.",
+    "price": "$9.25",
+    "image": null,
+    "ingredients": ["Michter's Kentucky Bourbon", "Sweet vermouth", "Bitters", "Maraschino cherry"],
+    "tags": ["Classic", "Strong", "Stirred"]
+  },
+  {
+    "id": "spicy-bourbonade",
+    "name": "Spicy Bourbonade",
+    "description": "Bulleit Bourbon, lemonade, honey with a dash of cayenne pepper.",
+    "price": "$8.50",
+    "image": null,
+    "ingredients": ["Bulleit Bourbon", "Lemonade", "Honey", "Cayenne pepper"],
+    "tags": ["Spicy", "Refreshing"]
+  },
+  {
+    "id": "kentucky-mule",
+    "name": "Kentucky Mule",
+    "description": "Bulleit Bourbon, ginger beer, fresh limes.",
+    "price": "$8.50",
+    "image": null,
+    "ingredients": ["Bulleit Bourbon", "Ginger beer", "Fresh limes"],
+    "tags": ["Refreshing", "Classic"]
+  }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "sparkling-french",
+    "name": "Sparkling French",
+    "description": "Grey Goose Vodka, Chambord, pineapple juice, sparkling wine.",
+    "price": "$12.75",
+    "image": null,
+    "ingredients": ["Grey Goose Vodka", "Chambord", "Pineapple juice", "Sparkling wine"],
+    "tags": ["Sparkling", "Fruity", "Elegant"]
+  },
+  {
+    "id": "mango-peach-infusion",
+    "name": "Mango Peach Infusion",
+    "description": "Tito's Vodka, Bacardi Silver, Peach Tree Schnapps, mango puree, grenadine drizzle.",
+    "price": "$11",
+    "image": null,
+    "ingredients": ["Tito's Vodka", "Bacardi Silver", "Peach Tree Schnapps", "Mango puree", "Grenadine drizzle"],
+    "tags": ["Fruity", "Sweet", "Tropical"]
+  },
+  {
+    "id": "cucumber",
+    "name": "Cucumber",
+    "description": "Your choice of Hendrick's Gin or Pearl Cucumber Vodka, muddled cucumbers, basil & fresh lemon juice.",
+    "price": "$11",
+    "image": null,
+    "ingredients": ["Hendrick's Gin or Pearl Cucumber Vodka", "Muddled cucumbers", "Basil", "Fresh lemon juice"],
+    "tags": ["Fresh", "Botanical", "Crisp"]
+  }
+]
