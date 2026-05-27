@@ -90,20 +90,14 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import categoriesData from '../data/categories.json'
+import { useMenuData } from '../composables/useMenuData'
 
-const itemModules = import.meta.glob('../data/items/*.json', { eager: true })
-const allItems = {}
-for (const path in itemModules) {
-  const key = path.replace('../data/items/', '').replace('.json', '')
-  allItems[key] = itemModules[path].default
-}
-
+const { categories: allCategories, getItems } = useMenuData()
 const route = useRoute()
 
-const category = computed(() => categoriesData.find(c => c.id === route.params.id))
+const category = computed(() => allCategories.value.find(c => c.id === route.params.id))
 const item = computed(() => {
-  const list = allItems[route.params.id] ?? []
+  const list = getItems(route.params.id)
   return list.find(i => i.id === route.params.itemId) ?? null
 })
 </script>

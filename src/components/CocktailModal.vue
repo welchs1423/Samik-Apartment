@@ -1,19 +1,23 @@
 <template>
   <Teleport to="body">
     <Transition name="modal-fade">
-      <div v-if="item" class="modal-backdrop" @click.self="$emit('close')" @keydown.esc="$emit('close')">
+      <div v-if="item" class="modal-backdrop" @click.self="$emit('close')">
         <Transition name="modal-rise">
           <div v-if="item" class="modal-panel" role="dialog" :aria-label="item.name">
 
-            <!-- Close button -->
-            <button class="modal-close" @click="$emit('close')" aria-label="Close">
-              <span>×</span>
-            </button>
+            <button class="modal-close" @click="$emit('close')" aria-label="Close">×</button>
 
             <div class="modal-inner">
-              <!-- Left: large illustration -->
+              <!-- Left: image or watercolor illustration -->
               <div class="modal-art">
+                <img
+                  v-if="item.image"
+                  :src="item.image"
+                  :alt="item.name"
+                  class="modal-img"
+                />
                 <WatercolorIllustration
+                  v-else
                   :name="item.name"
                   :category="category"
                   :ingredients="item.ingredients || []"
@@ -23,36 +27,30 @@
 
               <!-- Right: details -->
               <div class="modal-details">
-                <!-- Category label -->
                 <p class="modal-cat">{{ categoryName }}</p>
 
-                <!-- Name -->
                 <h2 class="modal-name">{{ item.name }}</h2>
 
-                <!-- Price + divider -->
                 <div class="modal-row">
                   <span v-if="item.price" class="modal-price">{{ item.price }}</span>
                   <span class="modal-line"></span>
                 </div>
 
-                <!-- Description -->
-                <p class="modal-desc">{{ item.description }}</p>
+                <p v-if="item.description" class="modal-desc">{{ item.description }}</p>
 
-                <!-- Tags -->
                 <div v-if="item.tags?.length" class="modal-tags">
                   <span v-for="tag in item.tags" :key="tag" class="modal-tag">{{ tag }}</span>
                 </div>
 
-                <!-- Divider -->
-                <div class="modal-sep"></div>
-
-                <!-- Ingredients -->
-                <p class="modal-section">Ingredients</p>
-                <ul class="modal-ings">
-                  <li v-for="ing in item.ingredients" :key="ing" class="modal-ing">
-                    <span class="modal-dash">—</span>{{ ing }}
-                  </li>
-                </ul>
+                <template v-if="item.ingredients?.length">
+                  <div class="modal-sep"></div>
+                  <p class="modal-section">Ingredients</p>
+                  <ul class="modal-ings">
+                    <li v-for="ing in item.ingredients" :key="ing" class="modal-ing">
+                      <span class="modal-dash">—</span>{{ ing }}
+                    </li>
+                  </ul>
+                </template>
               </div>
             </div>
 
@@ -74,13 +72,11 @@ const props = defineProps({
 })
 const emit = defineEmits(['close'])
 
-// Lock body scroll while modal open
 watch(() => props.item, val => {
   document.body.style.overflow = val ? 'hidden' : ''
 })
 onUnmounted(() => { document.body.style.overflow = '' })
 
-// ESC key
 function onKey(e) { if (e.key === 'Escape' && props.item) emit('close') }
 onMounted(() => window.addEventListener('keydown', onKey))
 onUnmounted(() => window.removeEventListener('keydown', onKey))
@@ -95,19 +91,19 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: rgba(20, 18, 16, 0.72);
-  backdrop-filter: blur(4px);
+  background: rgba(14, 12, 10, 0.82);
+  backdrop-filter: blur(6px);
 }
 
 .modal-panel {
   position: relative;
-  background: #F8F4EC;
+  background: #1A1613;
   max-width: 860px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  border: 1px solid #D4C8B0;
-  box-shadow: 0 32px 80px rgba(20,18,16,0.55), 0 0 0 1px rgba(197,168,128,0.15);
+  border: 1px solid #2E2823;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(197,168,128,0.08);
 }
 
 .modal-close {
@@ -118,13 +114,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   background: none;
   border: none;
   cursor: pointer;
-  color: #7A6248;
+  color: #C8C2B8;
   font-size: 1.8rem;
   line-height: 1;
   padding: 0.25rem 0.5rem;
   transition: color 0.15s;
 }
-.modal-close:hover { color: #3C2E1E; }
+.modal-close:hover { color: #EAE6DF; }
 
 .modal-inner {
   display: grid;
@@ -132,17 +128,22 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   min-height: 480px;
 }
 
-/* Left illustration panel */
+/* Left panel */
 .modal-art {
-  background: #EDE7D9;
-  border-right: 1px solid #D4C8B0;
-  padding: 2rem 1.5rem;
+  background: #141210;
+  border-right: 1px solid #2E2823;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+.modal-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-/* Right detail panel */
+/* Right panel */
 .modal-details {
   padding: 2.5rem 2.2rem 2.5rem 2rem;
   display: flex;
@@ -151,8 +152,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
 .modal-cat {
   font-family: 'Lato', system-ui, sans-serif;
-  font-size: 0.65rem;
-  letter-spacing: 0.28em;
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
   color: #C5A880;
   margin-bottom: 0.6rem;
@@ -163,7 +164,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   font-size: 2.4rem;
   font-style: italic;
   font-weight: 300;
-  color: #3C2E1E;
+  color: #EAE6DF;
   line-height: 1.15;
   margin-bottom: 1rem;
 }
@@ -184,14 +185,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .modal-line {
   flex: 1;
   height: 1px;
-  background: #D4C8B0;
+  background: #2E2823;
 }
 
 .modal-desc {
   font-family: 'Lato', system-ui, sans-serif;
   font-size: 0.82rem;
   line-height: 1.85;
-  color: #6A5640;
+  color: #C8C2B8;
   margin-bottom: 1.2rem;
 }
 
@@ -203,17 +204,16 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 }
 .modal-tag {
   font-family: 'Lato', system-ui, sans-serif;
-  font-size: 0.6rem;
-  letter-spacing: 0.18em;
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #7A6248;
-  border: 1px solid #D4C8B0;
-  padding: 0.2rem 0.65rem;
-  background: #F8F4EC;
+  color: #C8C2B8;
+  border: 1px solid #2E2823;
+  padding: 0.18rem 0.6rem;
 }
 
 .modal-sep {
-  border-top: 1px solid #D4C8B0;
+  border-top: 1px solid #2E2823;
   margin-bottom: 1.2rem;
 }
 
@@ -237,7 +237,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .modal-ing {
   font-family: 'Lato', system-ui, sans-serif;
   font-size: 0.8rem;
-  color: #4A3728;
+  color: #EAE6DF;
   display: flex;
   align-items: baseline;
   gap: 0.55rem;
@@ -247,7 +247,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   flex-shrink: 0;
 }
 
-/* ── Transitions ── */
+/* Transitions */
 .modal-fade-enter-active,
 .modal-fade-leave-active { transition: opacity 0.28s ease; }
 .modal-fade-enter-from,
@@ -258,21 +258,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .modal-rise-enter-from    { opacity: 0; transform: translateY(28px) scale(0.97); }
 .modal-rise-leave-to      { opacity: 0; transform: translateY(14px) scale(0.98); }
 
-/* ── Mobile ── */
 @media (max-width: 640px) {
-  .modal-inner {
-    grid-template-columns: 1fr;
-  }
+  .modal-inner { grid-template-columns: 1fr; }
   .modal-art {
     border-right: none;
-    border-bottom: 1px solid #D4C8B0;
-    padding: 1.5rem;
+    border-bottom: 1px solid #2E2823;
+    min-height: 220px;
   }
-  .modal-details {
-    padding: 1.8rem 1.5rem;
-  }
-  .modal-name {
-    font-size: 2rem;
-  }
+  .modal-details { padding: 1.8rem 1.5rem; }
+  .modal-name { font-size: 2rem; }
 }
 </style>

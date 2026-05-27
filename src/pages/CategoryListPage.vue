@@ -51,8 +51,12 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import WatercolorIllustration from '../components/WatercolorIllustration.vue'
-import categories from '../data/categories.json'
+import { useMenuData } from '../composables/useMenuData'
+
+const { categories: categoriesRef } = useMenuData()
+const categories = computed(() => categoriesRef.value)
 
 function typeLabel(type) {
   if (type === 'cocktail') return 'Cocktails'

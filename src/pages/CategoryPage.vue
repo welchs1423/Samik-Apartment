@@ -86,14 +86,6 @@
     </div>
 
     </div><!-- cocktail-inner -->
-
-    <!-- Detail modal -->
-    <CocktailModal
-      :item="selectedItem"
-      :category="category.id"
-      :category-name="category.name"
-      @close="selectedItem = null"
-    />
   </div>
 
   <!-- ═══════════════════════════════════════════════
@@ -120,11 +112,18 @@
         </div>
         <p v-if="group.note" class="wine-note">{{ group.note }}</p>
         <div class="wine-list">
-          <div v-for="wine in group.items" :key="wine.name" class="wine-row">
+          <div
+            v-for="wine in group.items"
+            :key="wine.name"
+            class="wine-row"
+            :class="{ 'wine-row--clickable': wine.image }"
+            @click="wine.image ? openModal({ name: wine.name, price: wine.glassPrice, bottlePrice: wine.bottlePrice, image: wine.image, description: null, ingredients: [], tags: [], id: wine.name }) : null"
+          >
             <span class="wine-name">{{ wine.name }}</span>
             <div class="wine-prices">
               <span v-if="wine.glassPrice" class="wine-price">gl. {{ wine.glassPrice }}</span>
               <span v-if="wine.bottlePrice" class="wine-price">btl. {{ wine.bottlePrice }}</span>
+              <span v-if="wine.image" class="wine-img-hint">⊕</span>
             </div>
           </div>
         </div>
@@ -150,8 +149,15 @@
       </header>
 
       <div class="spirit-grid">
-        <div v-for="spirit in items" :key="spirit.name" class="spirit-cell">
+        <div
+          v-for="spirit in items"
+          :key="spirit.name"
+          class="spirit-cell"
+          :class="{ 'spirit-cell--clickable': spirit.image }"
+          @click="spirit.image ? openModal({ name: spirit.name, price: spirit.price, image: spirit.image, description: spirit.description, ingredients: [], tags: [], id: spirit.name }) : null"
+        >
           <span class="spirit-name">{{ spirit.name }}</span>
+          <span v-if="spirit.price" class="spirit-price">{{ spirit.price }}</span>
         </div>
       </div>
       <p v-if="category.note" class="spirit-note">{{ category.note }}</p>
@@ -163,26 +169,28 @@
     <p class="text-sm tracking-wide" style="color:#C8C2B8;">Category not found.</p>
     <router-link to="/menu" class="text-xs tracking-widest uppercase mt-6 inline-block" style="color:#C5A880;text-decoration:none;">← Back to Menu</router-link>
   </div>
+
+  <!-- Shared detail modal — all category types -->
+  <CocktailModal
+    :item="selectedItem"
+    :category="category?.id ?? ''"
+    :category-name="category?.name ?? ''"
+    @close="selectedItem = null"
+  />
 </template>
 
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import categoriesData from '../data/categories.json'
 import WatercolorIllustration from '../components/WatercolorIllustration.vue'
 import CocktailModal from '../components/CocktailModal.vue'
+import { useMenuData } from '../composables/useMenuData'
 
-const itemModules = import.meta.glob('../data/items/*.json', { eager: true })
-const allItems = {}
-for (const path in itemModules) {
-  const key = path.replace('../data/items/', '').replace('.json', '')
-  allItems[key] = itemModules[path].default
-}
-
+const { categories: allCategories, getItems } = useMenuData()
 const route = useRoute()
 
-const category = computed(() => categoriesData.find(c => c.id === route.params.id))
-const items    = computed(() => allItems[route.params.id] ?? [])
+const category = computed(() => allCategories.value.find(c => c.id === route.params.id))
+const items    = computed(() => getItems(route.params.id))
 
 // Pagination (cocktail type only)
 const ITEMS_PER_PAGE = 4
@@ -531,6 +539,8 @@ function typeLabel(type) {
 }
 .wine-row:last-child { border-bottom: none; }
 .wine-row:hover { background: #1A1613; }
+.wine-row--clickable { cursor: pointer; }
+.wine-row--clickable:hover { border-left: 2px solid #C5A880; }
 .wine-name {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 1.05rem;
@@ -565,6 +575,21 @@ function typeLabel(type) {
   transition: background 0.15s;
 }
 .spirit-cell:hover { background: #1A1613; }
+.spirit-cell--clickable { cursor: pointer; }
+.spirit-cell--clickable:hover { border-left: 2px solid #C5A880; }
+.spirit-price {
+  display: block;
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.68rem;
+  color: #C5A880;
+  margin-top: 0.2rem;
+}
+.wine-img-hint {
+  font-size: 0.75rem;
+  color: #C5A880;
+  opacity: 0.6;
+  margin-left: 0.4rem;
+}
 .spirit-name {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 1rem;
