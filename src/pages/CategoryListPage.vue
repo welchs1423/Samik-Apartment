@@ -13,8 +13,48 @@
       </div>
     </header>
 
+    <!-- Search bar -->
+    <div class="search-wrap">
+      <div class="search-box">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="5.5" cy="5.5" r="4"/>
+          <line x1="9" y1="9" x2="13" y2="13"/>
+        </svg>
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="search-input"
+          placeholder="Search menu..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button v-if="searchQuery" class="search-clear" @click="searchQuery = ''">×</button>
+      </div>
+    </div>
+
+    <!-- Search results -->
+    <template v-if="searchQuery.trim()">
+      <p v-if="searchResults.length === 0" class="search-empty">
+        No results for "<em>{{ searchQuery }}</em>"
+      </p>
+      <div v-else class="search-results">
+        <div
+          v-for="item in searchResults"
+          :key="`${item._catId}-${item.id ?? item.name}`"
+          class="search-row"
+          @click="openModal(item)"
+        >
+          <div class="search-row-left">
+            <span class="search-item-name">{{ item.name }}</span>
+            <span v-if="item.description" class="search-item-desc">{{ item.description }}</span>
+          </div>
+          <span class="search-item-cat">{{ item._catName }}</span>
+        </div>
+      </div>
+    </template>
+
     <!-- Category grid -->
-    <div class="catlist-grid">
+    <div v-else class="catlist-grid">
       <router-link
         v-for="cat in categories"
         :key="cat.id"
@@ -34,8 +74,6 @@
 
         <!-- Card body -->
         <div class="cat-body">
-          <!-- Type badge -->
-          <span class="cat-badge">{{ typeLabel(cat.type) }}</span>
           <h3 class="cat-name">{{ cat.name }}</h3>
           <p class="cat-desc">{{ cat.description }}</p>
           <div class="cat-cta">
@@ -48,22 +86,59 @@
 
     </div><!-- catlist-inner -->
   </div>
+
+  <CocktailModal
+    :item="selectedItem"
+    :category="selectedItem?._catId ?? ''"
+    :category-name="selectedItem?._catName ?? ''"
+    @close="selectedItem = null"
+  />
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import WatercolorIllustration from '../components/WatercolorIllustration.vue'
+import CocktailModal from '../components/CocktailModal.vue'
 import { useMenuData } from '../composables/useMenuData'
 
-const { categories: categoriesRef } = useMenuData()
+const { categories: categoriesRef, getItems } = useMenuData()
 const categories = computed(() => categoriesRef.value)
 
-function typeLabel(type) {
-  if (type === 'cocktail') return 'Cocktails'
-  if (type === 'wine')     return 'Wine'
-  if (type === 'spirit')   return 'Spirits'
-  return type
-}
+// ── Search ────────────────────────────────────────────
+const searchQuery = ref('')
+const selectedItem = ref(null)
+
+const allItems = computed(() => {
+  return categories.value.flatMap(cat => {
+    const raw = getItems(cat.id)
+    if (!raw?.length) return []
+    if (cat.type === 'wine') {
+      return raw.flatMap(group =>
+        (group.items ?? []).map(w => ({
+          id: w.name,
+          name: w.name,
+          price: w.glassPrice ?? null,
+          bottlePrice: w.bottlePrice ?? null,
+          image: w.image ?? null,
+          description: w.description ?? null,
+          ingredients: w.ingredients ?? [],
+          tags: w.tags ?? [],
+          _catId: cat.id,
+          _catName: cat.name,
+        }))
+      )
+    }
+    return raw.map(item => ({ ...item, _catId: cat.id, _catName: cat.name }))
+  })
+})
+
+const searchResults = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return []
+  return allItems.value.filter(item => item.name.toLowerCase().includes(q))
+})
+
+function openModal(item) { selectedItem.value = item }
 </script>
 
 <style scoped>
@@ -120,6 +195,105 @@ function typeLabel(type) {
   opacity: 0.55;
 }
 
+/* Search */
+.search-wrap {
+  margin-bottom: 2.5rem;
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 1px solid #2E2823;
+  background: #1A1613;
+  padding: 0.6rem 0.9rem;
+  transition: border-color 0.18s;
+}
+.search-box:focus-within {
+  border-color: #C5A880;
+}
+.search-icon {
+  color: #8A7F74;
+  flex-shrink: 0;
+}
+.search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.85rem;
+  color: #EAE6DF;
+  letter-spacing: 0.04em;
+}
+.search-input::placeholder { color: #5A504A; }
+.search-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #8A7F74;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0 0.1rem;
+  transition: color 0.15s;
+}
+.search-clear:hover { color: #C8C2B8; }
+.search-empty {
+  text-align: center;
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: #8A7F74;
+  padding: 3rem 0;
+  letter-spacing: 0.04em;
+}
+.search-empty em { font-style: italic; color: #C8C2B8; }
+.search-results {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #2E2823;
+}
+.search-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid #2E2823;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.search-row:last-child { border-bottom: none; }
+.search-row:hover { background: #1A1613; }
+.search-row-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.search-item-name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.1rem;
+  font-style: italic;
+  font-weight: 400;
+  color: #EAE6DF;
+}
+.search-item-desc {
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.72rem;
+  color: #8A7F74;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 36ch;
+}
+.search-item-cat {
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #C5A880;
+  flex-shrink: 0;
+}
+
 /* Grid */
 .catlist-grid {
   display: grid;
@@ -165,15 +339,6 @@ function typeLabel(type) {
   flex: 1;
   display: flex;
   flex-direction: column;
-}
-.cat-badge {
-  font-family: 'Lato', system-ui, sans-serif;
-  font-size: 0.58rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: #C5A880;
-  margin-bottom: 0.35rem;
-  display: block;
 }
 .cat-name {
   font-family: 'Cormorant Garamond', Georgia, serif;

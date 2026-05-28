@@ -33,6 +33,7 @@
 
                 <div class="modal-row">
                   <span v-if="item.price" class="modal-price">{{ item.price }}</span>
+                  <span v-if="item.bottlePrice" class="modal-price" style="opacity:0.7; font-size:1rem;">btl. {{ item.bottlePrice }}</span>
                   <span class="modal-line"></span>
                 </div>
 

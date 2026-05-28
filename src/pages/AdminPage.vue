@@ -44,7 +44,6 @@
           <div v-for="cat in categories" :key="cat.id" class="table-row">
             <div class="row-main">
               <span class="row-name">{{ cat.name }}</span>
-              <span class="type-badge" :class="`type-${cat.type}`">{{ cat.type }}</span>
               <span v-if="cat.description" class="row-desc">{{ cat.description }}</span>
             </div>
             <div class="row-actions">
@@ -85,9 +84,27 @@
             </div>
           </div>
 
-          <!-- Wine: grouped badge display -->
+          <!-- Wine hint -->
           <div v-if="isWineCat" class="type-hint">
             Items are grouped by subcategory. Each row is an individual wine.
+          </div>
+
+          <!-- ── Subcategory management ── -->
+          <div class="subcat-mgmt">
+            <div class="subcat-mgmt-header">
+              <span class="subcat-mgmt-title">Subcategories</span>
+              <button class="btn-sm" @click="openAddSubcatModal">+ Add</button>
+            </div>
+            <div v-if="existingSubcategories.length > 0" class="subcat-tag-list">
+              <div v-for="s in existingSubcategories" :key="s" class="subcat-tag-row">
+                <span class="subcat-tag-name">{{ s }}</span>
+                <div class="row-actions" style="gap:0.3rem;">
+                  <button class="btn-sm" @click="openEditSubcatModal(s)">Edit</button>
+                  <button class="btn-sm btn-danger" @click="confirmDeleteSubcat(s)">Delete</button>
+                </div>
+              </div>
+            </div>
+            <p v-else class="empty-msg" style="font-size:0.78rem; margin:0.25rem 0 0;">No subcategories yet.</p>
           </div>
 
           <div class="admin-table">
@@ -98,7 +115,7 @@
               </div>
               <div class="row-main">
                 <span class="row-name">{{ item.name }}</span>
-                <span v-if="isWineCat" class="subcat-badge">{{ item._subcategory }}</span>
+                <span v-if="item._subcategory" class="subcat-badge">{{ item._subcategory }}</span>
                 <span v-if="item.price" class="row-price">{{ item.price }}</span>
                 <span v-if="item.bottlePrice" class="row-price" style="opacity:.7;">btl. {{ item.bottlePrice }}</span>
                 <span v-if="item.description" class="row-desc">{{ item.description }}</span>
@@ -119,7 +136,7 @@
   </div>
 
   <!-- ════ CATEGORY MODAL ════ -->
-  <div v-if="showCatModal" class="modal-overlay" @click.self="closeCatModal">
+  <div v-if="showCatModal" class="modal-overlay" @mousedown.self="closeCatModal">
     <div class="modal-box">
       <h3 class="modal-title">{{ editingCat ? 'Edit Category' : 'Add Category' }}</h3>
       <div class="form-fields">
@@ -131,14 +148,6 @@
           <span class="field-label">ID (slug) *</span>
           <input v-model="catForm.id" class="admin-input" placeholder="e.g. martinis" :disabled="!!editingCat" />
           <span class="field-hint">Lowercase, no spaces. Used in URL.</span>
-        </label>
-        <label class="field">
-          <span class="field-label">Type *</span>
-          <select v-model="catForm.type" class="admin-input">
-            <option value="cocktail">Cocktail</option>
-            <option value="wine">Wine</option>
-            <option value="spirit">Spirit</option>
-          </select>
         </label>
         <label class="field">
           <span class="field-label">Description</span>
@@ -158,7 +167,7 @@
   </div>
 
   <!-- ════ ITEM MODAL ════ -->
-  <div v-if="showItemModal" class="modal-overlay" @click.self="closeItemModal">
+  <div v-if="showItemModal" class="modal-overlay" @mousedown.self="closeItemModal">
     <div class="modal-box modal-box--wide">
       <h3 class="modal-title">{{ editingItem ? 'Edit Item' : 'Add Item' }}</h3>
 
@@ -170,15 +179,17 @@
         </label>
 
         <!-- Cocktail: ID slug -->
-        <label v-if="isCocktailCat" class="field">
+        <label v-if="!isWineCat" class="field">
           <span class="field-label">ID (slug) *</span>
           <input v-model="itemForm.id" class="admin-input" placeholder="e.g. manhattan" :disabled="!!editingItem" />
         </label>
 
-        <!-- Wine: subcategory -->
-        <label v-if="isWineCat" class="field">
-          <span class="field-label">Subcategory *</span>
-          <input v-model="itemForm.subcategory" class="admin-input" placeholder="e.g. Red, White, House" list="subcat-list" />
+        <!-- Subcategory — all types (required for wine, optional otherwise) -->
+        <label class="field">
+          <span class="field-label">Subcategory{{ isWineCat ? ' *' : '' }}</span>
+          <input v-model="itemForm.subcategory" class="admin-input"
+            :placeholder="isWineCat ? 'e.g. Red, White, House' : 'e.g. Blanco, Reposado (optional)'"
+            list="subcat-list" />
           <datalist id="subcat-list">
             <option v-for="s in existingSubcategories" :key="s" :value="s" />
           </datalist>
@@ -202,21 +213,19 @@
           <input v-model="itemForm.price" class="admin-input" placeholder="e.g. $9.25" />
         </label>
 
-        <!-- Cocktail: description, ingredients, tags -->
-        <template v-if="isCocktailCat">
-          <label class="field">
-            <span class="field-label">Description</span>
-            <textarea v-model="itemForm.description" class="admin-input" rows="3" placeholder="Flavor notes..."></textarea>
-          </label>
-          <label class="field">
-            <span class="field-label">Ingredients (one per line)</span>
-            <textarea v-model="itemForm.ingredientsRaw" class="admin-input" rows="4" placeholder="Bourbon 60ml&#10;Sweet vermouth 30ml"></textarea>
-          </label>
-          <label class="field">
-            <span class="field-label">Tags (comma-separated)</span>
-            <input v-model="itemForm.tagsRaw" class="admin-input" placeholder="Classic, Strong, Stirred" />
-          </label>
-        </template>
+        <!-- Description, ingredients, tags — all types -->
+        <label class="field">
+          <span class="field-label">Description</span>
+          <textarea v-model="itemForm.description" class="admin-input" rows="3" placeholder="Flavor notes..."></textarea>
+        </label>
+        <label class="field">
+          <span class="field-label">Ingredients (one per line)</span>
+          <textarea v-model="itemForm.ingredientsRaw" class="admin-input" rows="4" placeholder="Bourbon 60ml&#10;Sweet vermouth 30ml"></textarea>
+        </label>
+        <label class="field">
+          <span class="field-label">Tags (comma-separated)</span>
+          <input v-model="itemForm.tagsRaw" class="admin-input" placeholder="Classic, Strong, Stirred" />
+        </label>
 
         <!-- Image upload — all types -->
         <div class="field">
@@ -240,6 +249,28 @@
       <div class="modal-actions">
         <button class="btn-outline" @click="closeItemModal">Cancel</button>
         <button class="btn-save" @click="saveItemForm">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ SUBCATEGORY MODAL ════ -->
+  <div v-if="showSubcatModal" class="modal-overlay" @mousedown.self="closeSubcatModal">
+    <div class="modal-box">
+      <h3 class="modal-title">{{ editingSubcat !== null ? 'Edit Subcategory' : 'Add Subcategory' }}</h3>
+      <div class="form-fields">
+        <label class="field">
+          <span class="field-label">Name *</span>
+          <input v-model="subcatForm.name" class="admin-input" placeholder="e.g. Red, Blanco, Reposado" />
+        </label>
+        <label v-if="isWineCat" class="field">
+          <span class="field-label">Note</span>
+          <input v-model="subcatForm.note" class="admin-input" placeholder="e.g. By the glass & bottle" />
+        </label>
+      </div>
+      <p v-if="subcatFormError" class="form-error">{{ subcatFormError }}</p>
+      <div class="modal-actions">
+        <button class="btn-outline" @click="closeSubcatModal">Cancel</button>
+        <button class="btn-save" @click="saveSubcatForm">Save</button>
       </div>
     </div>
   </div>
@@ -288,18 +319,18 @@ function slugify(s) {
 const showCatModal = ref(false)
 const editingCat = ref(null)
 const catFormError = ref('')
-const catForm = ref({ id: '', name: '', type: 'cocktail', description: '', note: '' })
+const catForm = ref({ id: '', name: '', description: '', note: '' })
 
 function openAddCatModal() {
   editingCat.value = null
-  catForm.value = { id: '', name: '', type: 'cocktail', description: '', note: '' }
+  catForm.value = { id: '', name: '', description: '', note: '' }
   catFormError.value = ''
   showCatModal.value = true
 }
 
 function openEditCatModal(cat) {
   editingCat.value = cat
-  catForm.value = { id: cat.id, name: cat.name, type: cat.type, description: cat.description ?? '', note: cat.note ?? '' }
+  catForm.value = { id: cat.id, name: cat.name, description: cat.description ?? '', note: cat.note ?? '' }
   catFormError.value = ''
   showCatModal.value = true
 }
@@ -316,7 +347,7 @@ function saveCategoryForm() {
   const payload = {
     id: catForm.value.id.trim(),
     name: catForm.value.name.trim(),
-    type: catForm.value.type,
+    type: editingCat.value?.type ?? 'cocktail',
     description: catForm.value.description.trim() || null,
     coverImage: editingCat.value?.coverImage ?? null,
   }
@@ -362,6 +393,9 @@ const displayItems = computed(() => {
           price: wine.glassPrice ?? null,
           bottlePrice: wine.bottlePrice ?? null,
           image: wine.image ?? null,
+          description: wine.description ?? null,
+          ingredients: wine.ingredients ?? [],
+          tags: wine.tags ?? [],
           _initial: (wine.name || '?').charAt(0),
         }))
       )
@@ -381,6 +415,7 @@ const displayItems = computed(() => {
       ...item,
       _key: item.id ?? slugify(item.name ?? ''),
       id: item.id ?? slugify(item.name ?? ''),
+      _subcategory: item.subcategory ?? '',
       _initial: (item.name || '?').charAt(0),
     }))
   }
@@ -389,16 +424,112 @@ const displayItems = computed(() => {
   return raw.map(item => ({
     ...item,
     _key: item.id ?? slugify(item.name ?? ''),
+    _subcategory: item.subcategory ?? '',
     _initial: (item.name || '?').charAt(0),
   }))
 })
 
-// Existing subcategories for wine datalist
+// Existing subcategories (used for datalist + subcategory management)
 const existingSubcategories = computed(() => {
-  if (!isWineCat.value || !selectedCatId.value) return []
+  if (!selectedCatId.value) return []
   const raw = getItems(selectedCatId.value)
-  return [...new Set((raw || []).map(g => g.subcategory).filter(Boolean))]
+  if (isWineCat.value) {
+    return [...new Set((raw || []).map(g => g.subcategory).filter(Boolean))]
+  }
+  // Spirit/cocktail: union of category.subcategories[] + subcategories found on items
+  const stored = selectedCat.value?.subcategories ?? []
+  const fromItems = (raw || []).map(i => i.subcategory).filter(Boolean)
+  return [...new Set([...stored, ...fromItems])]
 })
+
+// ── Subcategory management ─────────────────────────────
+const showSubcatModal = ref(false)
+const editingSubcat = ref(null)   // null = add, string = editing this name
+const subcatForm = ref({ name: '', note: '' })
+const subcatFormError = ref('')
+
+function openAddSubcatModal() {
+  editingSubcat.value = null
+  subcatForm.value = { name: '', note: '' }
+  subcatFormError.value = ''
+  showSubcatModal.value = true
+}
+
+function openEditSubcatModal(name) {
+  editingSubcat.value = name
+  let note = ''
+  if (isWineCat.value) {
+    const raw = getItems(selectedCatId.value)
+    note = (raw || []).find(g => g.subcategory === name)?.note ?? ''
+  }
+  subcatForm.value = { name, note }
+  subcatFormError.value = ''
+  showSubcatModal.value = true
+}
+
+function closeSubcatModal() { showSubcatModal.value = false }
+
+function saveSubcatForm() {
+  const newName = subcatForm.value.name.trim()
+  if (!newName) { subcatFormError.value = 'Name is required.'; return }
+
+  if (editingSubcat.value === null) {
+    // Add
+    if (existingSubcategories.value.includes(newName)) { subcatFormError.value = 'Already exists.'; return }
+    if (isWineCat.value) {
+      const groups = JSON.parse(JSON.stringify(getItems(selectedCatId.value) || []))
+      const newGroup = { subcategory: newName, items: [] }
+      if (subcatForm.value.note.trim()) newGroup.note = subcatForm.value.note.trim()
+      groups.push(newGroup)
+      setItems(selectedCatId.value, groups)
+    } else {
+      const cat = { ...selectedCat.value }
+      cat.subcategories = [...(cat.subcategories ?? []), newName]
+      saveCategory(cat)
+    }
+  } else {
+    // Edit / rename
+    const oldName = editingSubcat.value
+    if (oldName !== newName && existingSubcategories.value.includes(newName)) { subcatFormError.value = 'Already exists.'; return }
+    if (isWineCat.value) {
+      const groups = JSON.parse(JSON.stringify(getItems(selectedCatId.value) || []))
+      const group = groups.find(g => g.subcategory === oldName)
+      if (group) {
+        group.subcategory = newName
+        if (subcatForm.value.note.trim()) group.note = subcatForm.value.note.trim()
+        else delete group.note
+      }
+      setItems(selectedCatId.value, groups)
+    } else {
+      const cat = { ...selectedCat.value }
+      cat.subcategories = (cat.subcategories ?? []).map(s => s === oldName ? newName : s)
+      saveCategory(cat)
+      const raw = JSON.parse(JSON.stringify(getItems(selectedCatId.value) || []))
+      raw.forEach(item => { if (item.subcategory === oldName) item.subcategory = newName })
+      setItems(selectedCatId.value, raw)
+    }
+  }
+  closeSubcatModal()
+}
+
+function confirmDeleteSubcat(name) {
+  if (isWineCat.value) {
+    const groups = getItems(selectedCatId.value) || []
+    const count = groups.find(g => g.subcategory === name)?.items?.length ?? 0
+    if (!confirm(`"${name}" 서브카테고리를 삭제합니다${count > 0 ? ` (포함된 아이템 ${count}개도 삭제됨)` : ''}.`)) return
+    setItems(selectedCatId.value, JSON.parse(JSON.stringify(groups.filter(g => g.subcategory !== name))))
+  } else {
+    const raw = getItems(selectedCatId.value) || []
+    const count = raw.filter(i => i.subcategory === name).length
+    if (!confirm(`"${name}" 서브카테고리를 삭제합니다${count > 0 ? ` (아이템 ${count}개의 분류가 해제됨)` : ''}.`)) return
+    const cat = { ...selectedCat.value }
+    cat.subcategories = (cat.subcategories ?? []).filter(s => s !== name)
+    saveCategory(cat)
+    const newRaw = JSON.parse(JSON.stringify(raw))
+    newRaw.forEach(item => { if (item.subcategory === name) delete item.subcategory })
+    setItems(selectedCatId.value, newRaw)
+  }
+}
 
 // ── Item modal ────────────────────────────────────────
 const showItemModal = ref(false)
@@ -439,16 +570,19 @@ function openEditItemModal(displayItem) {
 
 function closeItemModal() { showItemModal.value = false }
 
-function handleImageUpload(e) {
+async function handleImageUpload(e) {
   const file = e.target.files[0]
   if (!file) return
   imageWarning.value = ''
-  if (file.size > 1_000_000) {
-    imageWarning.value = `Image is ${(file.size / 1024 / 1024).toFixed(1)}MB — may exceed localStorage limits.`
+  const formData = new FormData()
+  formData.append('image', file)
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: formData })
+    const data = await res.json()
+    itemForm.value.image = data.path
+  } catch {
+    imageWarning.value = '이미지 업로드에 실패했습니다.'
   }
-  const reader = new FileReader()
-  reader.onload = ev => { itemForm.value.image = ev.target.result }
-  reader.readAsDataURL(file)
   e.target.value = ''
 }
 
@@ -468,6 +602,11 @@ function saveWineItemForm() {
   if (itemForm.value.glassPrice.trim()) newWine.glassPrice = itemForm.value.glassPrice.trim()
   if (itemForm.value.bottlePrice.trim()) newWine.bottlePrice = itemForm.value.bottlePrice.trim()
   if (itemForm.value.image) newWine.image = itemForm.value.image
+  if (itemForm.value.description.trim()) newWine.description = itemForm.value.description.trim()
+  const wineIngs = itemForm.value.ingredientsRaw.split('\n').map(s => s.trim()).filter(Boolean)
+  if (wineIngs.length) newWine.ingredients = wineIngs
+  const wineTags = itemForm.value.tagsRaw.split(',').map(s => s.trim()).filter(Boolean)
+  if (wineTags.length) newWine.tags = wineTags
 
   if (editingItem.value?._isWine) {
     const [origSubcat, origName] = editingItem.value.id.split('::')
@@ -502,8 +641,14 @@ function saveWineItemForm() {
 function saveSpiritItemForm() {
   const raw = JSON.parse(JSON.stringify(getItems(selectedCatId.value) || []))
   const payload = { name: itemForm.value.name.trim() }
+  if (itemForm.value.subcategory.trim()) payload.subcategory = itemForm.value.subcategory.trim()
   if (itemForm.value.price.trim()) payload.price = itemForm.value.price.trim()
   if (itemForm.value.image) payload.image = itemForm.value.image
+  if (itemForm.value.description.trim()) payload.description = itemForm.value.description.trim()
+  const spiritIngs = itemForm.value.ingredientsRaw.split('\n').map(s => s.trim()).filter(Boolean)
+  if (spiritIngs.length) payload.ingredients = spiritIngs
+  const spiritTags = itemForm.value.tagsRaw.split(',').map(s => s.trim()).filter(Boolean)
+  if (spiritTags.length) payload.tags = spiritTags
 
   if (editingItem.value) {
     const originalName = editingItem.value.name
@@ -527,6 +672,7 @@ function saveCocktailItemForm() {
   const payload = {
     id: itemForm.value.id.trim(),
     name: itemForm.value.name.trim(),
+    subcategory: itemForm.value.subcategory.trim() || null,
     price: itemForm.value.price.trim() || null,
     description: itemForm.value.description.trim() || null,
     ingredients: itemForm.value.ingredientsRaw.split('\n').map(s => s.trim()).filter(Boolean),
@@ -806,19 +952,6 @@ function confirmDeleteItem(displayItem) {
   font-size: 0.7rem;
   color: #C5A880;
 }
-.type-badge {
-  font-family: 'Lato', system-ui, sans-serif;
-  font-size: 0.54rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  padding: 0.12rem 0.45rem;
-  border: 1px solid #2E2823;
-  color: #C8C2B8;
-  flex-shrink: 0;
-}
-.type-cocktail { border-color: #3A2E40; color: #B89FC5; }
-.type-wine     { border-color: #3A2020; color: #C58080; }
-.type-spirit   { border-color: #2A3028; color: #80B090; }
 
 .subcat-badge {
   font-family: 'Lato', system-ui, sans-serif;
@@ -829,6 +962,44 @@ function confirmDeleteItem(displayItem) {
   border: 1px solid #3A2020;
   color: #C58080;
   flex-shrink: 0;
+}
+
+/* ── Subcategory management ── */
+.subcat-mgmt {
+  margin-top: 1rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #2E2823;
+  background: rgba(255,255,255,0.015);
+}
+.subcat-mgmt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.subcat-mgmt-title {
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8A7F74;
+}
+.subcat-tag-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.subcat-tag-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0.5rem;
+  background: rgba(197,168,128,0.04);
+  border: 1px solid #2E2823;
+}
+.subcat-tag-name {
+  font-size: 0.82rem;
+  color: #C5A880;
 }
 
 .row-actions {
