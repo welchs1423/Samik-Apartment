@@ -77,7 +77,14 @@
             :aria-label="`View ${item.name} details`"
           >
             <div class="card-art">
+              <img
+                v-if="item.image"
+                :src="item.image"
+                :alt="item.name"
+                class="card-img"
+              />
               <WatercolorIllustration
+                v-else
                 :name="item.name"
                 :category="category.id"
                 :ingredients="item.ingredients || []"
@@ -320,7 +327,11 @@ const flatItems = computed(() => {
       }))
     )
   }
-  return items.value
+  return items.value.slice().sort((a, b) => {
+    if (a.subcategory && !b.subcategory) return -1
+    if (!a.subcategory && b.subcategory) return 1
+    return 0
+  })
 })
 
 // Group spirit/cocktail items by subcategory when subcategories are present
@@ -334,7 +345,13 @@ const subcategoryGroups = computed(() => {
     if (!groupMap.has(key)) groupMap.set(key, [])
     groupMap.get(key).push(item)
   }
-  return [...groupMap.entries()].map(([subcategory, its]) => ({ subcategory, items: its }))
+  return [...groupMap.entries()]
+    .sort(([a], [b]) => {
+      if (a && !b) return -1
+      if (!a && b) return 1
+      return 0
+    })
+    .map(([subcategory, its]) => ({ subcategory, items: its }))
 })
 
 const hasSubcats = computed(() => subcategoryGroups.value.length > 0)
@@ -497,6 +514,11 @@ function openModal(item) { selectedItem.value = item }
   background: #141210;
   overflow: hidden;
 }
+.card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .card-art-overlay {
   position: absolute;
   inset: 0;
@@ -612,7 +634,7 @@ function openModal(item) { selectedItem.value = item }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.9rem 1.5rem;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid #2E2823;
   transition: background 0.15s;
 }
@@ -622,7 +644,7 @@ function openModal(item) { selectedItem.value = item }
 .wine-row--clickable:hover { border-left: 2px solid #C5A880; }
 .wine-name {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 300;
   color: #EAE6DF;
   letter-spacing: 0.02em;
@@ -636,9 +658,8 @@ function openModal(item) { selectedItem.value = item }
 }
 .wine-price {
   font-family: 'Lato', system-ui, sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  color: #C8C2B8;
+  font-size: 0.68rem;
+  color: #C5A880;
 }
 .wine-img-hint { font-size: 0.75rem; color: #C5A880; opacity: 0.6; margin-left: 0.4rem; }
 
@@ -685,7 +706,7 @@ function openModal(item) { selectedItem.value = item }
 }
 
 /* ─── Wine table view ─── */
-.wine-table-group { margin-bottom: 2.5rem; }
+.wine-table-group { margin-bottom: 3rem; }
 
 /* ─── Mobile ─── */
 @media (max-width: 500px) {
