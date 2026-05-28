@@ -14,24 +14,106 @@
 ```
 src/
 ├── data/
-│   └── cocktails.json      # 칵테일 메뉴 데이터 (서버 없이 JSON으로 관리)
+│   ├── categories.json         # 카테고리 목록
+│   └── items/                  # 카테고리별 아이템 JSON
+│       ├── wines.json
+│       ├── bourbon.json
+│       └── ...
 ├── components/
-│   ├── NavBar.vue          # 고정 상단 네비게이션
-│   └── SiteFooter.vue      # 하단 풋터
+│   ├── NavBar.vue
+│   ├── SiteFooter.vue
+│   ├── CocktailModal.vue       # 아이템 상세 팝업
+│   └── WatercolorIllustration.vue
+├── composables/
+│   └── useMenuData.js          # 데이터 로드 + localStorage 오버라이드
 ├── pages/
-│   ├── MainPage.vue        # 메인 히어로 + 티저 섹션
-│   ├── MenuPage.vue        # 칵테일 메뉴 (베이스 필터 + 재료 토글)
-│   └── InfoPage.vue        # 운영 시간 및 방문 안내
+│   ├── MainPage.vue            # 메인 히어로
+│   ├── CategoryListPage.vue    # 전체 메뉴 (카테고리 그리드 + 검색)
+│   ├── CategoryPage.vue        # 카테고리별 아이템 (그리드/리스트/테이블 뷰)
+│   ├── InfoPage.vue            # 운영 시간 및 방문 안내
+│   └── AdminPage.vue           # 관리자 페이지
 ├── router/
-│   └── index.js            # Vue Router 설정
+│   └── index.js
 ├── App.vue
 ├── main.js
-└── style.css               # Tailwind + Google Fonts + 전역 스타일
+└── style.css
 ```
 
-## 디자인 컨셉
+## 페이지
 
-올드 바 / 스피크이지 무드.
+| 경로 | 설명 |
+|---|---|
+| `/` | 메인 히어로 |
+| `/menu` | 전체 카테고리 목록 + 이름 검색 |
+| `/menu/:id` | 카테고리별 아이템 (그리드 / 리스트 / 테이블 뷰 전환) |
+| `/info` | 운영 시간, 방문 안내, 위치 |
+| `/admin` | 관리자 페이지 (비밀번호 보호) |
+
+## 주요 기능
+
+### 메뉴
+- 전체 카테고리 카드 그리드
+- 상단 검색창 — 전 카테고리 아이템 이름 실시간 검색, 결과 클릭 시 상세 팝업
+- 카테고리 내 그리드 / 리스트 / 테이블 뷰 전환
+- 서브카테고리가 있는 경우 자동 그룹핑 표시
+- 모든 아이템 클릭 시 상세 팝업 (이름, 가격, 설명, 재료, 태그, 이미지)
+
+### 어드민 (`/admin`)
+- 비밀번호 인증 (세션 유지)
+- **카테고리** 추가 / 수정 / 삭제 + JSON 내보내기
+- **서브카테고리** 추가 / 수정 / 삭제 (카테고리별 독립 관리)
+- **아이템** 추가 / 수정 / 삭제 — 이름, 가격, 설명, 재료, 태그, 이미지, 서브카테고리
+- 이미지 업로드 (`/api/upload` → `public/images/`)
+- 변경사항은 localStorage에 저장, Export로 소스 JSON 파일 교체 가능
+- Reset으로 원본 데이터 복원
+
+## 데이터 구조
+
+### categories.json
+
+```json
+[
+  {
+    "id": "martinis",
+    "name": "Martini's",
+    "description": "Shaken or stirred",
+    "coverImage": null
+  }
+]
+```
+
+### items/{id}.json — 일반 아이템
+
+```json
+[
+  {
+    "id": "manhattan",
+    "name": "Manhattan",
+    "subcategory": "Classic",
+    "price": "$12",
+    "description": "Flavor notes...",
+    "ingredients": ["Bourbon 60ml", "Sweet vermouth 30ml"],
+    "tags": ["Strong", "Stirred"],
+    "image": null
+  }
+]
+```
+
+### items/wines.json — 와인 (서브카테고리 그룹 구조)
+
+```json
+[
+  {
+    "subcategory": "Red",
+    "note": "By the glass & bottle",
+    "items": [
+      { "name": "Bogle / Cabernet Sauvignon", "glassPrice": "$8.25", "bottlePrice": "$30" }
+    ]
+  }
+]
+```
+
+## 디자인 토큰
 
 | 역할 | 값 |
 |---|---|
@@ -41,48 +123,26 @@ src/
 | 보조 텍스트 | `#C8C2B8` (뮤트 크림) |
 | 테두리 | `#2E2823` (다크 브라운) |
 
-폰트: **Cormorant Garamond** (타이틀, 이탤릭 세리프) + **Lato Light** (본문)
-
-## 페이지
-
-- `/` — 메인 히어로, 바 소개
-- `/menu` — 베이스별 필터 + 칵테일 카드 (클릭 시 재료 펼침)
-- `/info` — 운영 시간, 방문 안내사항, 위치
-
-## 칵테일 데이터 추가
-
-`src/data/cocktails.json`에 아래 형식으로 항목을 추가하면 Menu 페이지에 자동 반영됩니다.
-
-```json
-{
-  "id": 6,
-  "name": "칵테일 이름",
-  "base": "Whiskey",
-  "description": "한 줄 설명",
-  "ingredients": ["재료 1", "재료 2"],
-  "tags": ["Sweet", "Classic"]
-}
-```
-
-`base` 값은 필터 탭에 자동으로 추가됩니다.
+폰트: **Cormorant Garamond** (타이틀, 이탤릭 세리프) + **Lato** (본문)
 
 ## 로컬 실행
 
 ```bash
 npm install
-npm run dev
+npm run dev   # Vite dev server (HMR) + 이미지 업로드 서버 동시 실행
 ```
 
 ## 프로덕션 빌드
 
 ```bash
-npm run build
+npm run build   # dist/ 생성
+npm run preview # 빌드 결과 로컬 미리보기
 ```
-
-빌드 결과물은 `dist/` 폴더에 생성됩니다. Vercel Hobby 플랜 무료 배포에 최적화되어 있습니다.
 
 ## 변경 이력
 
 | 날짜 | 내용 |
 |---|---|
-| 2026-05-25 | 프로젝트 초기 구성 — Vue 3 + Vite + Tailwind CSS v4, 3페이지 SPA, 칵테일 JSON 데이터 5종 |
+| 2026-05-28 | 어드민 개선, 메뉴 전체 검색, 상세팝업 전면 개방, 서브카테고리 관리 UI |
+| 2026-05-25 | 카테고리/아이템 구조로 메뉴 전면 개편, 어드민 페이지, 다중 뷰 모드 추가 |
+| 2026-05-24 | 프로젝트 초기 구성 — Vue 3 + Vite + Tailwind CSS v4, 3페이지 SPA |
