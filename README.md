@@ -8,7 +8,6 @@
 - **Vite 8** — 빌드 툴
 - **Tailwind CSS v4** (`@tailwindcss/vite` 플러그인)
 - **Vue Router 4** — Hash 기반 클라이언트 라우팅
-- **Express + multer** — 이미지 업로드 서버 (`server.js`)
 
 ## 프로젝트 구조
 
@@ -63,7 +62,7 @@ src/
 - **카테고리** 추가 / 수정 / 삭제 + JSON 내보내기
 - **서브카테고리** 추가 / 수정 / 삭제 (카테고리별 독립 관리)
 - **아이템** 추가 / 수정 / 삭제 — 이름, 가격, 설명, 재료, 태그, 이미지, 서브카테고리
-- 이미지 업로드 (`/api/upload` → `public/images/`)
+- 이미지는 `public/images/`에 파일을 두고 경로(`/images/filename.jpg`)를 직접 입력
 - 변경사항은 localStorage에 저장
 - Reset으로 원본 데이터 복원
 
@@ -138,7 +137,7 @@ src/
 
 ```bash
 npm install
-npm run dev   # Vite dev server (HMR) + 이미지 업로드 서버 동시 실행
+npm run dev   # Vite dev server (HMR)
 ```
 
 ## 프로덕션 빌드

@@ -14,11 +14,9 @@ No test suite or linter is configured.
 
 ## Dev Environment
 
-Two processes run together via `concurrently`:
-- **Vite** on port 5173 — serves the Vue SPA
-- **`server.js`** on port 3001 — Express + multer, handles `POST /api/upload` (saves to `public/images/`)
+`npm run dev` runs Vite only (port 5173). No separate server needed.
 
-Vite proxies `/api/*` to `localhost:3001` in `vite.config.js`. Image filenames are timestamped (`Date.now()`).
+Images are committed directly to `public/images/` and referenced by path (e.g. `/images/filename.jpg`) in the admin.
 
 ## Architecture
 
