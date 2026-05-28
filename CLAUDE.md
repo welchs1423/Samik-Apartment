@@ -50,9 +50,9 @@ Two-tier data model:
 - **`src/data/categories.json`** — ordered list of categories. Each entry: `id`, `name`, `type` (`cocktail` | `spirit` | `wine`), `description`, `coverImage`, optional `note`.
 - **`src/data/items/<catId>.json`** — one file per category. Cocktails/spirits are flat arrays; wines are grouped arrays `[{ subcategory, note, items: [...] }]` with `glassPrice`/`bottlePrice` fields instead of `ingredients`.
 
-**`src/composables/useMenuData.js`** is the single reactive store. It uses `import.meta.glob('../data/items/*.json', { eager: true })` to load all item files at build time, then overlays any `localStorage` edits on top (`samik_cats` for categories, `samik_admin_<catId>` for items). It exposes `getItems`, `saveItem`, `deleteItem`, `saveCategory`, `deleteCategory`, `exportCategories`, `exportItems`, and `resetAll`. All pages read/write through this composable.
+**`src/composables/useMenuData.js`** is the single reactive store. It uses `import.meta.glob('../data/items/*.json', { eager: true })` to load all item files at build time, then overlays any `localStorage` edits on top (`samik_cats` for categories, `samik_admin_<catId>` for items). It exposes `getItems`, `saveItem`, `deleteItem`, `saveCategory`, `deleteCategory`, and `resetAll`. All pages read/write through this composable.
 
-The Admin page saves changes to `localStorage` only. To persist edits into source files, use **Export JSON** and replace the relevant file in `src/data/`.
+The Admin page saves changes to `localStorage` only. Source JSON files in `src/data/` are the build-time defaults and are not modified at runtime.
 
 ### Key non-obvious patterns
 

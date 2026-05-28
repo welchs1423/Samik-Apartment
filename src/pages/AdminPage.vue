@@ -28,7 +28,7 @@
           <span class="orn-line"></span><span class="orn-dot"></span><span class="orn-line"></span>
         </div>
         <p class="admin-note">
-          Changes are saved to localStorage. Use <span style="color:#C5A880;">Export JSON</span> to download and replace source files.
+          Changes are saved to localStorage.
           <button @click="confirmResetAll" class="reset-btn">Reset all overrides</button>
         </p>
       </div>
@@ -54,9 +54,6 @@
           <p v-if="categories.length === 0" class="empty-msg">No categories.</p>
         </div>
 
-        <div class="export-row">
-          <button class="btn-outline" @click="exportCategories">Export categories.json</button>
-        </div>
       </section>
 
       <!-- ════ SECTION 2: ITEMS ════ -->
@@ -80,7 +77,6 @@
             </span>
             <div class="btn-group">
               <button class="btn-gold" @click="openAddItemModal">+ Add Item</button>
-              <button class="btn-outline" @click="exportItems(selectedCatId)">Export JSON</button>
             </div>
           </div>
 
@@ -302,7 +298,7 @@ function tryLogin() {
 }
 
 // ── Data ──────────────────────────────────────────────
-const { categories, getItems, setItems, saveCategory, deleteCategory, saveItem, deleteItem, exportCategories, exportItems, resetAll } = useMenuData()
+const { categories, getItems, setItems, saveCategory, deleteCategory, saveItem, deleteItem, resetAll } = useMenuData()
 
 function confirmResetAll() {
   if (confirm('Reset all localStorage overrides? This will restore the original source data.')) {
@@ -1054,7 +1050,6 @@ function confirmDeleteItem(displayItem) {
   padding: 1.5rem;
   text-align: center;
 }
-.export-row { margin-top: 0.6rem; display: flex; justify-content: flex-end; }
 
 /* Buttons */
 .btn-gold {

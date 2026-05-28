@@ -90,28 +90,6 @@ export function useMenuData() {
     localStorage.setItem(ITEMS_PREFIX + catId, JSON.stringify(list))
   }
 
-  function exportCategories() {
-    const data = JSON.stringify(state.categories, null, 2)
-    const blob = new Blob([data], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'categories.json'
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  function exportItems(catId) {
-    const data = JSON.stringify(getItems(catId), null, 2)
-    const blob = new Blob([data], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${catId}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
   function resetAll() {
     localStorage.removeItem(CATS_KEY)
     for (const cat of [...categoriesJson, ...state.categories]) {
@@ -131,8 +109,6 @@ export function useMenuData() {
     deleteCategory,
     saveItem,
     deleteItem,
-    exportCategories,
-    exportItems,
     resetAll,
   }
 }
