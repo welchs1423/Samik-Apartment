@@ -8,6 +8,7 @@
 - **Vite 8** — 빌드 툴
 - **Tailwind CSS v4** (`@tailwindcss/vite` 플러그인)
 - **Vue Router 4** — Hash 기반 클라이언트 라우팅
+- **Express + multer** — 이미지 업로드 서버 (`server.js`)
 
 ## 프로젝트 구조
 
@@ -30,7 +31,6 @@ src/
 │   ├── MainPage.vue            # 메인 히어로
 │   ├── CategoryListPage.vue    # 전체 메뉴 (카테고리 그리드 + 검색)
 │   ├── CategoryPage.vue        # 카테고리별 아이템 (그리드/리스트/테이블 뷰)
-│   ├── InfoPage.vue            # 운영 시간 및 방문 안내
 │   └── AdminPage.vue           # 관리자 페이지
 ├── router/
 │   └── index.js
@@ -46,7 +46,6 @@ src/
 | `/` | 메인 히어로 |
 | `/menu` | 전체 카테고리 목록 + 이름 검색 |
 | `/menu/:id` | 카테고리별 아이템 (그리드 / 리스트 / 테이블 뷰 전환) |
-| `/info` | 운영 시간, 방문 안내, 위치 |
 | `/admin` | 관리자 페이지 (비밀번호 보호) |
 
 ## 주요 기능
@@ -55,7 +54,8 @@ src/
 - 전체 카테고리 카드 그리드
 - 상단 검색창 — 전 카테고리 아이템 이름 실시간 검색, 결과 클릭 시 상세 팝업
 - 카테고리 내 그리드 / 리스트 / 테이블 뷰 전환
-- 서브카테고리가 있는 경우 자동 그룹핑 표시
+- 서브카테고리가 있는 아이템을 우선 표시, 자동 그룹핑
+- 아이템에 이미지가 있으면 카드 썸네일 및 상세 팝업에 표시; 없으면 수채화 일러스트 자동 생성
 - 모든 아이템 클릭 시 상세 팝업 (이름, 가격, 설명, 재료, 태그, 이미지)
 
 ### 어드민 (`/admin`)
@@ -76,13 +76,17 @@ src/
   {
     "id": "martinis",
     "name": "Martini's",
+    "type": "cocktail",
     "description": "Shaken or stirred",
-    "coverImage": null
+    "coverImage": null,
+    "note": "Optional serving note"
   }
 ]
 ```
 
-### items/{id}.json — 일반 아이템
+`type`: `"cocktail"` | `"spirit"` | `"wine"` — 카테고리 기본 뷰 및 데이터 구조를 결정
+
+### items/{id}.json — 일반 아이템 (cocktail / spirit)
 
 ```json
 [
@@ -94,7 +98,7 @@ src/
     "description": "Flavor notes...",
     "ingredients": ["Bourbon 60ml", "Sweet vermouth 30ml"],
     "tags": ["Strong", "Stirred"],
-    "image": null
+    "image": "/images/1234567890.jpg"
   }
 ]
 ```
@@ -107,7 +111,12 @@ src/
     "subcategory": "Red",
     "note": "By the glass & bottle",
     "items": [
-      { "name": "Bogle / Cabernet Sauvignon", "glassPrice": "$8.25", "bottlePrice": "$30" }
+      {
+        "name": "Bogle / Cabernet Sauvignon",
+        "glassPrice": "$8.25",
+        "bottlePrice": "$30",
+        "image": null
+      }
     ]
   }
 ]
@@ -143,6 +152,7 @@ npm run preview # 빌드 결과 로컬 미리보기
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-05-28 | 카드 썸네일 이미지 표시, 서브카테고리 우선 정렬, 리스트/테이블 뷰 스타일 통일 |
 | 2026-05-28 | 어드민 개선, 메뉴 전체 검색, 상세팝업 전면 개방, 서브카테고리 관리 UI |
 | 2026-05-25 | 카테고리/아이템 구조로 메뉴 전면 개편, 어드민 페이지, 다중 뷰 모드 추가 |
 | 2026-05-24 | 프로젝트 초기 구성 — Vue 3 + Vite + Tailwind CSS v4, 3페이지 SPA |
