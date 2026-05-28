@@ -35,7 +35,7 @@ const route = useRoute()
 const links = [
   { path: '/', label: 'Home' },
   { path: '/menu', label: 'Menu' },
-  { path: '/admin', label: 'Admin' },
+  ...(import.meta.env.DEV ? [{ path: '/admin', label: 'Admin' }] : []),
 ]
 
 function isActive(path) {
