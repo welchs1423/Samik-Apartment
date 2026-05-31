@@ -37,11 +37,6 @@
           {{ item.name }}
         </h1>
 
-        <div class="flex items-center gap-4 mb-8">
-          <span class="font-serif text-2xl" style="color: #C5A880; font-weight: 300;">{{ item.price }}</span>
-          <span class="flex-1 block h-px" style="background-color: #2E2823;"></span>
-        </div>
-
         <p class="text-sm leading-8 mb-8" style="color: #C8C2B8;">
           {{ item.description }}
         </p>

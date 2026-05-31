@@ -31,12 +31,6 @@
 
                 <h2 class="modal-name">{{ item.name }}</h2>
 
-                <div class="modal-row">
-                  <span v-if="item.price" class="modal-price">{{ item.price }}</span>
-                  <span v-if="item.bottlePrice" class="modal-price" style="opacity:0.7; font-size:1rem;">btl. {{ item.bottlePrice }}</span>
-                  <span class="modal-line"></span>
-                </div>
-
                 <p v-if="item.description" class="modal-desc">{{ item.description }}</p>
 
                 <div v-if="item.tags?.length" class="modal-tags">
@@ -168,25 +162,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   color: #EAE6DF;
   line-height: 1.15;
   margin-bottom: 1rem;
-}
-
-.modal-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.2rem;
-}
-.modal-price {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.3rem;
-  font-weight: 300;
-  color: #C5A880;
-  white-space: nowrap;
-}
-.modal-line {
-  flex: 1;
-  height: 1px;
-  background: #2E2823;
 }
 
 .modal-desc {

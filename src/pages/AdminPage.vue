@@ -209,33 +209,37 @@
           <input v-model="itemForm.price" class="admin-input" placeholder="e.g. $9.25" />
         </label>
 
-        <!-- Description, ingredients, tags — all types -->
+        <!-- Description — all types -->
         <label class="field">
           <span class="field-label">Description</span>
           <textarea v-model="itemForm.description" class="admin-input" rows="3" placeholder="Flavor notes..."></textarea>
         </label>
-        <label class="field">
-          <span class="field-label">Ingredients (one per line)</span>
-          <textarea v-model="itemForm.ingredientsRaw" class="admin-input" rows="4" placeholder="Bourbon 60ml&#10;Sweet vermouth 30ml"></textarea>
-        </label>
-        <label class="field">
-          <span class="field-label">Tags (comma-separated)</span>
-          <input v-model="itemForm.tagsRaw" class="admin-input" placeholder="Classic, Strong, Stirred" />
-        </label>
 
-        <!-- Image path — all types -->
+        <!-- Ingredients, tags — cocktail / spirit only -->
+        <template v-if="!isWineCat">
+          <label class="field">
+            <span class="field-label">Ingredients (one per line)</span>
+            <textarea v-model="itemForm.ingredientsRaw" class="admin-input" rows="4" placeholder="Bourbon 60ml&#10;Sweet vermouth 30ml"></textarea>
+          </label>
+          <label class="field">
+            <span class="field-label">Tags (comma-separated)</span>
+            <input v-model="itemForm.tagsRaw" class="admin-input" placeholder="Classic, Strong, Stirred" />
+          </label>
+        </template>
+
+        <!-- Image upload — all types -->
         <div class="field">
-          <span class="field-label">Image Path</span>
+          <span class="field-label">Image</span>
           <div class="image-upload-area">
-            <input
-              v-model="itemForm.image"
-              class="admin-input"
-              placeholder="/images/filename.jpg"
-            />
             <div v-if="itemForm.image" class="image-preview">
               <img :src="itemForm.image" alt="Preview" class="preview-img" />
               <button class="remove-img-btn" @click="itemForm.image = null" title="Remove">✕</button>
             </div>
+            <label class="upload-btn">
+              {{ itemForm.image ? 'Replace Image' : 'Choose Image' }}
+              <input type="file" accept="image/*" class="file-input" @change="handleImageUpload" />
+            </label>
+            <p v-if="imageWarning" class="image-warning">{{ imageWarning }}</p>
           </div>
         </div>
       </div>
@@ -531,6 +535,7 @@ function confirmDeleteSubcat(name) {
 const showItemModal = ref(false)
 const editingItem = ref(null)
 const itemFormError = ref('')
+const imageWarning = ref('')
 const itemForm = ref({
   id: '', name: '', price: '', description: '', ingredientsRaw: '', tagsRaw: '', image: null,
   subcategory: '', glassPrice: '', bottlePrice: '',
@@ -540,6 +545,7 @@ function openAddItemModal() {
   editingItem.value = null
   itemForm.value = { id: '', name: '', price: '', description: '', ingredientsRaw: '', tagsRaw: '', image: null, subcategory: '', glassPrice: '', bottlePrice: '' }
   itemFormError.value = ''
+  imageWarning.value = ''
   showItemModal.value = true
 }
 
@@ -558,10 +564,27 @@ function openEditItemModal(displayItem) {
     bottlePrice: displayItem.bottlePrice ?? '',
   }
   itemFormError.value = ''
+  imageWarning.value = ''
   showItemModal.value = true
 }
 
 function closeItemModal() { showItemModal.value = false }
+
+async function handleImageUpload(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  imageWarning.value = ''
+  const formData = new FormData()
+  formData.append('image', file)
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: formData })
+    const data = await res.json()
+    itemForm.value.image = data.path
+  } catch {
+    imageWarning.value = '이미지 업로드에 실패했습니다.'
+  }
+  e.target.value = ''
+}
 
 function saveItemForm() {
   if (!itemForm.value.name.trim()) { itemFormError.value = 'Name is required.'; return }
@@ -1138,7 +1161,7 @@ function confirmDeleteItem(displayItem) {
 .admin-input:disabled { opacity: 0.45; cursor: not-allowed; }
 select.admin-input { cursor: pointer; }
 
-/* Image path */
+/* Image upload */
 .image-upload-area { display: flex; flex-direction: column; gap: 0.6rem; }
 .image-preview {
   position: relative;
@@ -1166,6 +1189,27 @@ select.admin-input { cursor: pointer; }
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.upload-btn {
+  display: inline-block;
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.42rem 0.9rem;
+  border: 1px solid #2E2823;
+  color: #C8C2B8;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.18s;
+  align-self: flex-start;
+}
+.upload-btn:hover { border-color: #C5A880; color: #C5A880; }
+.file-input { display: none; }
+.image-warning {
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.65rem;
+  color: #B87A40;
 }
 
 .form-error {

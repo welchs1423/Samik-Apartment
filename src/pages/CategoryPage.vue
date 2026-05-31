@@ -2,9 +2,24 @@
   <div v-if="category" class="category-page">
     <div class="page-inner">
 
-      <!-- Top bar: back + view toggle -->
+      <!-- Top bar: back link -->
       <div class="top-bar">
         <router-link to="/menu" class="back-link">← Menu</router-link>
+      </div>
+
+      <!-- Page header -->
+      <header class="page-header">
+        <p v-if="category.description" class="page-eyebrow">{{ category.description }}</p>
+        <h2 class="page-title">{{ category.name }}</h2>
+        <div class="page-ornament">
+          <span class="orn-line"></span>
+          <span class="orn-dot"></span>
+          <span class="orn-line"></span>
+        </div>
+      </header>
+
+      <!-- View toggle -->
+      <div class="content-toolbar">
         <div class="view-toggle">
           <button
             class="toggle-btn"
@@ -52,17 +67,6 @@
         </div>
       </div>
 
-      <!-- Page header -->
-      <header class="page-header">
-        <p v-if="category.description" class="page-eyebrow">{{ category.description }}</p>
-        <h2 class="page-title">{{ category.name }}</h2>
-        <div class="page-ornament">
-          <span class="orn-line"></span>
-          <span class="orn-dot"></span>
-          <span class="orn-line"></span>
-        </div>
-      </header>
-
       <!-- ── GRID VIEW ── -->
       <template v-if="viewMode === 'grid'">
         <div class="cocktail-grid">
@@ -95,7 +99,6 @@
             <div class="card-footer">
               <div class="card-footer-inner">
                 <span class="card-name">{{ item.name }}</span>
-                <span v-if="item.price" class="card-price">{{ item.price }}</span>
               </div>
               <div v-if="item.tags?.length" class="card-tags">
                 <span v-for="tag in item.tags.slice(0,3)" :key="tag" class="card-tag">{{ tag }}</span>
@@ -134,7 +137,6 @@
               <h3 class="wine-subcat-name">{{ group.subcategory }}</h3>
               <span class="wine-subcat-line"></span>
             </div>
-            <p v-if="group.note" class="wine-note">{{ group.note }}</p>
             <div class="wine-list">
               <div
                 v-for="wine in group.items"
@@ -143,10 +145,6 @@
                 @click="openModal({ id: wine.name, name: wine.name, price: wine.glassPrice, bottlePrice: wine.bottlePrice, image: wine.image ?? null, description: wine.description ?? null, ingredients: wine.ingredients ?? [], tags: wine.tags ?? [] })"
               >
                 <span class="wine-name">{{ wine.name }}</span>
-                <div class="wine-prices">
-                  <span v-if="wine.glassPrice" class="wine-price">gl. {{ wine.glassPrice }}</span>
-                  <span v-if="wine.bottlePrice" class="wine-price">btl. {{ wine.bottlePrice }}</span>
-                </div>
               </div>
             </div>
           </div>
@@ -168,7 +166,6 @@
                 >
                   <span class="wine-name">{{ item.name }}</span>
                   <div class="wine-prices">
-                    <span v-if="item.price" class="wine-price">{{ item.price }}</span>
                     <span v-for="tag in (item.tags || []).slice(0,2)" :key="tag" class="card-tag" style="margin-left:0.4rem;">{{ tag }}</span>
                   </div>
                 </div>
@@ -184,7 +181,6 @@
             >
               <span class="wine-name">{{ item.name }}</span>
               <div class="wine-prices">
-                <span v-if="item.price" class="wine-price">{{ item.price }}</span>
                 <span
                   v-for="tag in (item.tags || []).slice(0,2)"
                   :key="tag"
@@ -206,7 +202,6 @@
               <h3 class="wine-subcat-name">{{ group.subcategory }}</h3>
               <span class="wine-subcat-line"></span>
             </div>
-            <p v-if="group.note" class="wine-note">{{ group.note }}</p>
             <div class="spirit-grid" style="margin-bottom:0;">
               <div
                 v-for="wine in group.items"
@@ -215,7 +210,6 @@
                 @click="openModal({ id: wine.name, name: wine.name, price: wine.glassPrice, bottlePrice: wine.bottlePrice, image: wine.image ?? null, description: wine.description ?? null, ingredients: wine.ingredients ?? [], tags: wine.tags ?? [] })"
               >
                 <span class="spirit-name">{{ wine.name }}</span>
-                <span v-if="wine.glassPrice" class="spirit-price">gl. {{ wine.glassPrice }}</span>
               </div>
             </div>
           </div>
@@ -236,7 +230,6 @@
                   @click="openModal(item)"
                 >
                   <span class="spirit-name">{{ item.name }}</span>
-                  <span v-if="item.price" class="spirit-price">{{ item.price }}</span>
                 </div>
               </div>
             </div>
@@ -409,10 +402,17 @@ function openModal(item) { selectedItem.value = item }
 }
 .back-link:hover { color: #C5A880; }
 
+/* ─── Content toolbar ─── */
+.content-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+  margin-top: -1.5rem;
+}
+
 /* ─── View toggle ─── */
 .view-toggle {
   display: flex;
-  gap: 0.3rem;
 }
 .toggle-btn {
   display: flex;
@@ -422,19 +422,33 @@ function openModal(item) { selectedItem.value = item }
   height: 2rem;
   background: none;
   border: 1px solid #2E2823;
+  border-right: none;
   color: #4A4540;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   padding: 0;
 }
+.toggle-btn:last-child {
+  border-right: 1px solid #2E2823;
+}
 .toggle-btn:hover {
   border-color: #C5A880;
   color: #C5A880;
+  z-index: 1;
+  position: relative;
+}
+.toggle-btn:hover + .toggle-btn {
+  border-left-color: #C5A880;
 }
 .toggle-btn.active {
   background: #C5A880;
   border-color: #C5A880;
   color: #141210;
+  position: relative;
+  z-index: 1;
+}
+.toggle-btn.active + .toggle-btn {
+  border-left-color: #C5A880;
 }
 
 /* ─── Page header ─── */
@@ -545,14 +559,6 @@ function openModal(item) { selectedItem.value = item }
   color: #EAE6DF;
   line-height: 1.25;
 }
-.card-price {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 0.95rem;
-  font-weight: 300;
-  color: #C5A880;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
 .card-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .card-tag {
   font-family: 'Lato', system-ui, sans-serif;
@@ -656,11 +662,6 @@ function openModal(item) { selectedItem.value = item }
   margin-left: 1rem;
   align-items: center;
 }
-.wine-price {
-  font-family: 'Lato', system-ui, sans-serif;
-  font-size: 0.68rem;
-  color: #C5A880;
-}
 .wine-img-hint { font-size: 0.75rem; color: #C5A880; opacity: 0.6; margin-left: 0.4rem; }
 
 /* ─── Spirit / table grid ─── */
@@ -686,13 +687,6 @@ function openModal(item) { selectedItem.value = item }
   color: #EAE6DF;
   letter-spacing: 0.02em;
   display: block;
-}
-.spirit-price {
-  display: block;
-  font-family: 'Lato', system-ui, sans-serif;
-  font-size: 0.68rem;
-  color: #C5A880;
-  margin-top: 0.2rem;
 }
 .spirit-note {
   font-family: 'Lato', system-ui, sans-serif;
