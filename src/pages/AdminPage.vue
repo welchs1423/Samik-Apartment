@@ -27,10 +27,7 @@
         <div class="admin-ornament">
           <span class="orn-line"></span><span class="orn-dot"></span><span class="orn-line"></span>
         </div>
-        <p class="admin-note">
-          Changes are saved to localStorage.
-          <button @click="confirmResetAll" class="reset-btn">Reset all overrides</button>
-        </p>
+        <p class="admin-note">Changes are written directly to JSON files.</p>
       </div>
 
       <!-- ════ SECTION 1: CATEGORIES ════ -->
@@ -302,14 +299,7 @@ function tryLogin() {
 }
 
 // ── Data ──────────────────────────────────────────────
-const { categories, getItems, setItems, saveCategory, deleteCategory, saveItem, deleteItem, resetAll } = useMenuData()
-
-function confirmResetAll() {
-  if (confirm('Reset all localStorage overrides? This will restore the original source data.')) {
-    resetAll()
-    selectedCatId.value = null
-  }
-}
+const { categories, getItems, setItems, saveCategory, deleteCategory, saveItem, deleteItem } = useMenuData()
 
 function slugify(s) {
   return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -861,18 +851,6 @@ function confirmDeleteItem(displayItem) {
   color: #C8C2B8;
   line-height: 1.6;
 }
-.reset-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: 'Lato', system-ui, sans-serif;
-  font-size: 0.72rem;
-  color: #7A3535;
-  text-decoration: underline;
-  margin-left: 0.75rem;
-  padding: 0;
-}
-
 /* Sections */
 .admin-section { margin-bottom: 3.5rem; }
 .section-head {

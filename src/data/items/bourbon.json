@@ -1,14 +1,42 @@
 [
-  { "name": "Basil Hayden 8yr" },
-  { "name": "Bulleit" },
-  { "name": "Elijah Craig" },
-  { "name": "Jefferson's" },
-  { "name": "Jim Beam" },
-  { "name": "Michter's Kentucky" },
-  { "name": "Whistle Pig" },
-  { "name": "Knob Creek" },
-  { "name": "Larceny" },
-  { "name": "Old Forester" },
-  { "name": "Woodford Reserve" },
-  { "name": "Wild Turkey 81" }
+  {
+    "name": "Basil Hayden 8yr"
+  },
+  {
+    "name": "Bulleit"
+  },
+  {
+    "name": "Elijah Craig"
+  },
+  {
+    "name": "Jefferson's"
+  },
+  {
+    "name": "Jim Beam"
+  },
+  {
+    "name": "Michter's Kentucky"
+  },
+  {
+    "name": "Whistle Pig"
+  },
+  {
+    "name": "Knob Creek"
+  },
+  {
+    "name": "Larceny"
+  },
+  {
+    "name": "Old Forester"
+  },
+  {
+    "name": "Woodford Reserve"
+  },
+  {
+    "name": "Wild Turkey 81"
+  },
+  {
+    "name": "Russel's Reserve 10yo",
+    "image": "/images/1780362072455.png"
+  }
 ]

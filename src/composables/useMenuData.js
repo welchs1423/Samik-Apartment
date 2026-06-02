@@ -8,33 +8,22 @@ for (const path in itemModules) {
   sourceItems[key] = itemModules[path].default ?? itemModules[path]
 }
 
-const CATS_KEY = 'samik_cats'
-const ITEMS_PREFIX = 'samik_admin_'
-
-function loadCategories() {
-  const stored = localStorage.getItem(CATS_KEY)
-  if (stored) {
-    try { return JSON.parse(stored) } catch { /* ignore */ }
+function persist(url, method, data) {
+  const opts = { method }
+  if (data !== undefined) {
+    opts.headers = { 'Content-Type': 'application/json' }
+    opts.body = JSON.stringify(data)
   }
-  return JSON.parse(JSON.stringify(categoriesJson))
-}
-
-function loadItems(catId) {
-  const stored = localStorage.getItem(ITEMS_PREFIX + catId)
-  if (stored) {
-    try { return JSON.parse(stored) } catch { /* ignore */ }
-  }
-  return JSON.parse(JSON.stringify(sourceItems[catId] ?? []))
+  fetch(url, opts).catch(err => console.error('[menu] persist error:', err))
 }
 
 const state = reactive({
-  categories: loadCategories(),
+  categories: JSON.parse(JSON.stringify(categoriesJson)),
   itemsCache: {},
 })
 
-// Preload all source categories upfront — avoids side effects inside computed getters
 for (const catId of Object.keys(sourceItems)) {
-  state.itemsCache[catId] = loadItems(catId)
+  state.itemsCache[catId] = JSON.parse(JSON.stringify(sourceItems[catId]))
 }
 
 export function useMenuData() {
@@ -42,14 +31,14 @@ export function useMenuData() {
 
   function getItems(catId) {
     if (!state.itemsCache[catId]) {
-      state.itemsCache[catId] = loadItems(catId)
+      state.itemsCache[catId] = JSON.parse(JSON.stringify(sourceItems[catId] ?? []))
     }
     return state.itemsCache[catId]
   }
 
   function setItems(catId, items) {
     state.itemsCache[catId] = items
-    localStorage.setItem(ITEMS_PREFIX + catId, JSON.stringify(items))
+    persist(`/api/data/items/${catId}`, 'POST', items)
   }
 
   function saveCategory(cat) {
@@ -59,16 +48,16 @@ export function useMenuData() {
     } else {
       state.categories.push({ ...cat })
       state.itemsCache[cat.id] = []
-      localStorage.setItem(ITEMS_PREFIX + cat.id, JSON.stringify([]))
+      persist(`/api/data/items/${cat.id}`, 'POST', [])
     }
-    localStorage.setItem(CATS_KEY, JSON.stringify(state.categories))
+    persist('/api/data/categories', 'POST', JSON.parse(JSON.stringify(state.categories)))
   }
 
   function deleteCategory(id) {
     const idx = state.categories.findIndex(c => c.id === id)
     if (idx !== -1) state.categories.splice(idx, 1)
-    localStorage.setItem(CATS_KEY, JSON.stringify(state.categories))
-    localStorage.removeItem(ITEMS_PREFIX + id)
+    persist('/api/data/categories', 'POST', JSON.parse(JSON.stringify(state.categories)))
+    persist(`/api/data/items/${id}`, 'DELETE')
     delete state.itemsCache[id]
   }
 
@@ -80,25 +69,14 @@ export function useMenuData() {
     } else {
       list.push({ ...item })
     }
-    localStorage.setItem(ITEMS_PREFIX + catId, JSON.stringify(list))
+    persist(`/api/data/items/${catId}`, 'POST', JSON.parse(JSON.stringify(list)))
   }
 
   function deleteItem(catId, itemId) {
     const list = getItems(catId)
     const idx = list.findIndex(i => i.id === itemId)
     if (idx !== -1) list.splice(idx, 1)
-    localStorage.setItem(ITEMS_PREFIX + catId, JSON.stringify(list))
-  }
-
-  function resetAll() {
-    localStorage.removeItem(CATS_KEY)
-    for (const cat of [...categoriesJson, ...state.categories]) {
-      localStorage.removeItem(ITEMS_PREFIX + cat.id)
-    }
-    state.categories.splice(0, state.categories.length, ...JSON.parse(JSON.stringify(categoriesJson)))
-    for (const catId of Object.keys(sourceItems)) {
-      state.itemsCache[catId] = loadItems(catId)
-    }
+    persist(`/api/data/items/${catId}`, 'POST', JSON.parse(JSON.stringify(list)))
   }
 
   return {
@@ -109,6 +87,5 @@ export function useMenuData() {
     deleteCategory,
     saveItem,
     deleteItem,
-    resetAll,
   }
 }
