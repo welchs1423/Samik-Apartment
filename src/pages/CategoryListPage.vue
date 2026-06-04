@@ -63,7 +63,9 @@
       >
         <!-- Illustration area -->
         <div class="cat-art">
+          <img v-if="cat.coverImage" :src="cat.coverImage" :alt="cat.name" class="cat-cover-img" />
           <WatercolorIllustration
+            v-else
             :name="cat.name"
             :category="cat.id"
             :ingredients="[]"
@@ -323,6 +325,12 @@ function openModal(item) { selectedItem.value = item }
   aspect-ratio: 1 / 1;
   background: #141210;
   overflow: hidden;
+}
+.cat-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .cat-art-fade {
   position: absolute;

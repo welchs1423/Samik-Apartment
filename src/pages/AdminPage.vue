@@ -150,6 +150,20 @@
           <span class="field-label">Note</span>
           <textarea v-model="catForm.note" class="admin-input" rows="2" placeholder="Serving note shown on category page"></textarea>
         </label>
+        <div class="field">
+          <span class="field-label">Cover Image</span>
+          <div class="image-upload-area">
+            <div v-if="catForm.coverImage" class="image-preview">
+              <img :src="catForm.coverImage" alt="Preview" class="preview-img" />
+              <button class="remove-img-btn" @click="catForm.coverImage = null" title="Remove">✕</button>
+            </div>
+            <label class="upload-btn">
+              {{ catForm.coverImage ? 'Replace Image' : 'Choose Image' }}
+              <input type="file" accept="image/*" class="file-input" @change="handleCategoryImageUpload" />
+            </label>
+            <p v-if="catImageWarning" class="image-warning">{{ catImageWarning }}</p>
+          </div>
+        </div>
       </div>
       <p v-if="catFormError" class="form-error">{{ catFormError }}</p>
       <div class="modal-actions">
@@ -309,23 +323,42 @@ function slugify(s) {
 const showCatModal = ref(false)
 const editingCat = ref(null)
 const catFormError = ref('')
-const catForm = ref({ id: '', name: '', description: '', note: '' })
+const catImageWarning = ref('')
+const catForm = ref({ id: '', name: '', description: '', note: '', coverImage: null })
 
 function openAddCatModal() {
   editingCat.value = null
-  catForm.value = { id: '', name: '', description: '', note: '' }
+  catForm.value = { id: '', name: '', description: '', note: '', coverImage: null }
   catFormError.value = ''
+  catImageWarning.value = ''
   showCatModal.value = true
 }
 
 function openEditCatModal(cat) {
   editingCat.value = cat
-  catForm.value = { id: cat.id, name: cat.name, description: cat.description ?? '', note: cat.note ?? '' }
+  catForm.value = { id: cat.id, name: cat.name, description: cat.description ?? '', note: cat.note ?? '', coverImage: cat.coverImage ?? null }
   catFormError.value = ''
+  catImageWarning.value = ''
   showCatModal.value = true
 }
 
 function closeCatModal() { showCatModal.value = false }
+
+async function handleCategoryImageUpload(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  catImageWarning.value = ''
+  const formData = new FormData()
+  formData.append('image', file)
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: formData })
+    const data = await res.json()
+    catForm.value.coverImage = data.path
+  } catch {
+    catImageWarning.value = '이미지 업로드에 실패했습니다.'
+  }
+  e.target.value = ''
+}
 
 function saveCategoryForm() {
   if (!catForm.value.name.trim()) { catFormError.value = 'Name is required.'; return }
@@ -339,7 +372,7 @@ function saveCategoryForm() {
     name: catForm.value.name.trim(),
     type: editingCat.value?.type ?? 'cocktail',
     description: catForm.value.description.trim() || null,
-    coverImage: editingCat.value?.coverImage ?? null,
+    coverImage: catForm.value.coverImage ?? null,
   }
   if (catForm.value.note.trim()) payload.note = catForm.value.note.trim()
   saveCategory(payload)
