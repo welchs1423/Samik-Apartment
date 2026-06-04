@@ -93,6 +93,7 @@
     :item="selectedItem"
     :category="selectedItem?._catId ?? ''"
     :category-name="selectedItem?._catName ?? ''"
+    :multi-ingredient="selectedItem?._multiIngredient ?? false"
     @close="selectedItem = null"
   />
 </template>
@@ -102,8 +103,10 @@ import { computed, ref } from 'vue'
 import WatercolorIllustration from '../components/WatercolorIllustration.vue'
 import CocktailModal from '../components/CocktailModal.vue'
 import { useMenuData } from '../composables/useMenuData'
+import { useIngredients } from '../composables/useIngredients'
 
 const { categories: categoriesRef, getItems } = useMenuData()
+const { hasOutOfStockIngredient } = useIngredients()
 const categories = computed(() => categoriesRef.value)
 
 // ── Search ────────────────────────────────────────────
@@ -114,23 +117,14 @@ const allItems = computed(() => {
   return categories.value.flatMap(cat => {
     const raw = getItems(cat.id)
     if (!raw?.length) return []
-    if (cat.type === 'wine') {
-      return raw.flatMap(group =>
-        (group.items ?? []).map(w => ({
-          id: w.name,
-          name: w.name,
-          price: w.glassPrice ?? null,
-          bottlePrice: w.bottlePrice ?? null,
-          image: w.image ?? null,
-          description: w.description ?? null,
-          ingredients: w.ingredients ?? [],
-          tags: w.tags ?? [],
-          _catId: cat.id,
-          _catName: cat.name,
-        }))
-      )
-    }
-    return raw.map(item => ({ ...item, _catId: cat.id, _catName: cat.name }))
+    return raw
+      .filter(item => item.available !== false && !hasOutOfStockIngredient(item.ingredients))
+      .map(item => ({
+        ...item,
+        _catId: cat.id,
+        _catName: cat.name,
+        _multiIngredient: cat.multiIngredient ?? false,
+      }))
   })
 })
 

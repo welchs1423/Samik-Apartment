@@ -52,4 +52,17 @@ app.post('/api/data/items', (req, res) => {
   res.json({ ok: true })
 })
 
+app.get('/api/data/ingredients', (req, res) => {
+  const filePath = path.join(dataDir, 'ingredients.json')
+  if (!fs.existsSync(filePath)) return res.json([])
+  res.json(JSON.parse(fs.readFileSync(filePath, 'utf8')))
+})
+
+app.post('/api/data/ingredients', (req, res) => {
+  const ingredients = req.body
+  if (!Array.isArray(ingredients)) return res.status(400).json({ error: 'Invalid data' })
+  fs.writeFileSync(path.join(dataDir, 'ingredients.json'), JSON.stringify(ingredients, null, 2))
+  res.json({ ok: true })
+})
+
 app.listen(3001, () => console.log('Dev server: http://localhost:3001'))

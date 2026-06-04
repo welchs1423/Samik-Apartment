@@ -130,123 +130,79 @@
 
       <!-- ── LIST VIEW ── -->
       <template v-else-if="viewMode === 'list'">
-        <!-- Wine: keep subcategory grouping -->
-        <template v-if="category.type === 'wine'">
-          <div v-for="group in items" :key="group.subcategory" class="wine-group">
-            <div class="wine-subcat-header">
+        <template v-if="hasSubcats">
+          <div v-for="group in subcategoryGroups" :key="group.subcategory" class="wine-group">
+            <div v-if="group.subcategory" class="wine-subcat-header">
               <h3 class="wine-subcat-name">{{ group.subcategory }}</h3>
               <span class="wine-subcat-line"></span>
             </div>
             <div class="wine-list">
               <div
-                v-for="wine in group.items"
-                :key="wine.name"
+                v-for="item in group.items"
+                :key="item.id ?? item.name"
                 class="wine-row wine-row--clickable"
-                @click="openModal({ id: wine.name, name: wine.name, price: wine.glassPrice, bottlePrice: wine.bottlePrice, image: wine.image ?? null, description: wine.description ?? null, ingredients: wine.ingredients ?? [], tags: wine.tags ?? [] })"
+                @click="openModal(item)"
               >
-                <span class="wine-name">{{ wine.name }}</span>
-              </div>
-            </div>
-          </div>
-        </template>
-        <!-- Cocktail / Spirit: grouped or flat list rows -->
-        <template v-else>
-          <template v-if="hasSubcats">
-            <div v-for="group in subcategoryGroups" :key="group.subcategory" class="wine-group">
-              <div v-if="group.subcategory" class="wine-subcat-header">
-                <h3 class="wine-subcat-name">{{ group.subcategory }}</h3>
-                <span class="wine-subcat-line"></span>
-              </div>
-              <div class="wine-list">
-                <div
-                  v-for="item in group.items"
-                  :key="item.id ?? item.name"
-                  class="wine-row wine-row--clickable"
-                  @click="openModal(item)"
-                >
-                  <span class="wine-name">{{ item.name }}</span>
-                  <div class="wine-prices">
-                    <span v-for="tag in (item.tags || []).slice(0,2)" :key="tag" class="card-tag" style="margin-left:0.4rem;">{{ tag }}</span>
-                  </div>
+                <span class="wine-name">{{ item.name }}</span>
+                <div class="wine-prices">
+                  <span v-for="tag in (item.tags || []).slice(0,2)" :key="tag" class="card-tag" style="margin-left:0.4rem;">{{ tag }}</span>
                 </div>
               </div>
             </div>
-          </template>
-          <div v-else class="wine-list">
-            <div
-              v-for="item in flatItems"
-              :key="item.id ?? item.name"
-              class="wine-row wine-row--clickable"
-              @click="openModal(item)"
-            >
-              <span class="wine-name">{{ item.name }}</span>
-              <div class="wine-prices">
-                <span
-                  v-for="tag in (item.tags || []).slice(0,2)"
-                  :key="tag"
-                  class="card-tag"
-                  style="margin-left:0.4rem;"
-                >{{ tag }}</span>
-              </div>
-            </div>
           </div>
         </template>
+        <div v-else class="wine-list">
+          <div
+            v-for="item in flatItems"
+            :key="item.id ?? item.name"
+            class="wine-row wine-row--clickable"
+            @click="openModal(item)"
+          >
+            <span class="wine-name">{{ item.name }}</span>
+            <div class="wine-prices">
+              <span
+                v-for="tag in (item.tags || []).slice(0,2)"
+                :key="tag"
+                class="card-tag"
+                style="margin-left:0.4rem;"
+              >{{ tag }}</span>
+            </div>
+          </div>
+        </div>
       </template>
 
       <!-- ── TABLE VIEW ── -->
       <template v-else>
-        <!-- Wine: table grouped by subcategory -->
-        <template v-if="category.type === 'wine'">
-          <div v-for="group in items" :key="group.subcategory" class="wine-table-group">
-            <div class="wine-subcat-header">
+        <template v-if="hasSubcats">
+          <div v-for="group in subcategoryGroups" :key="group.subcategory" class="wine-table-group">
+            <div v-if="group.subcategory" class="wine-subcat-header">
               <h3 class="wine-subcat-name">{{ group.subcategory }}</h3>
               <span class="wine-subcat-line"></span>
             </div>
             <div class="spirit-grid" style="margin-bottom:0;">
               <div
-                v-for="wine in group.items"
-                :key="wine.name"
+                v-for="item in group.items"
+                :key="item.id ?? item.name"
                 class="spirit-cell spirit-cell--clickable"
-                @click="openModal({ id: wine.name, name: wine.name, price: wine.glassPrice, bottlePrice: wine.bottlePrice, image: wine.image ?? null, description: wine.description ?? null, ingredients: wine.ingredients ?? [], tags: wine.tags ?? [] })"
+                @click="openModal(item)"
               >
-                <span class="spirit-name">{{ wine.name }}</span>
+                <span class="spirit-name">{{ item.name }}</span>
               </div>
             </div>
           </div>
         </template>
-        <!-- Cocktail / Spirit: grouped or flat compact grid -->
-        <template v-else>
-          <template v-if="hasSubcats">
-            <div v-for="group in subcategoryGroups" :key="group.subcategory" class="wine-table-group">
-              <div v-if="group.subcategory" class="wine-subcat-header">
-                <h3 class="wine-subcat-name">{{ group.subcategory }}</h3>
-                <span class="wine-subcat-line"></span>
-              </div>
-              <div class="spirit-grid" style="margin-bottom:0;">
-                <div
-                  v-for="item in group.items"
-                  :key="item.id ?? item.name"
-                  class="spirit-cell spirit-cell--clickable"
-                  @click="openModal(item)"
-                >
-                  <span class="spirit-name">{{ item.name }}</span>
-                </div>
-              </div>
-            </div>
-          </template>
-          <div v-else class="spirit-grid">
-            <div
-              v-for="item in flatItems"
-              :key="item.id ?? item.name"
-              class="spirit-cell spirit-cell--clickable"
-              @click="openModal(item)"
-            >
-              <span class="spirit-name">{{ item.name }}</span>
-              <span v-if="item.price" class="spirit-price">{{ item.price }}</span>
-            </div>
+        <div v-else class="spirit-grid">
+          <div
+            v-for="item in flatItems"
+            :key="item.id ?? item.name"
+            class="spirit-cell spirit-cell--clickable"
+            @click="openModal(item)"
+          >
+            <span class="spirit-name">{{ item.name }}</span>
+            <span v-if="item.price" class="spirit-price">{{ item.price }}</span>
           </div>
-          <p v-if="category.note" class="spirit-note">{{ category.note }}</p>
-        </template>
+        </div>
+        <p v-if="category.note" class="spirit-note">{{ category.note }}</p>
       </template>
 
     </div>
@@ -267,6 +223,7 @@
     :item="selectedItem"
     :category="category?.id ?? ''"
     :category-name="category?.name ?? ''"
+    :multi-ingredient="category?.multiIngredient ?? false"
     @close="selectedItem = null"
   />
 </template>
@@ -277,24 +234,21 @@ import { useRoute } from 'vue-router'
 import WatercolorIllustration from '../components/WatercolorIllustration.vue'
 import CocktailModal from '../components/CocktailModal.vue'
 import { useMenuData } from '../composables/useMenuData'
+import { useIngredients } from '../composables/useIngredients'
 
 const { categories: allCategories, getItems } = useMenuData()
+const { hasOutOfStockIngredient } = useIngredients()
 const route = useRoute()
 
 const category = computed(() => allCategories.value.find(c => c.id === route.params.id))
 const items    = computed(() => getItems(route.params.id))
 
-// View mode — default depends on category type
-const DEFAULT_VIEW = { cocktail: 'grid', wine: 'list', spirit: 'table' }
-const currentPage  = ref(0)
-const viewMode     = ref('grid')
+const currentPage = ref(0)
+const viewMode    = ref('grid')
 
 watch(
-  () => category.value?.type,
-  (type) => {
-    viewMode.value = DEFAULT_VIEW[type] ?? 'grid'
-    currentPage.value = 0
-  },
+  () => category.value?.id,
+  () => { currentPage.value = 0 },
   { immediate: true }
 )
 
@@ -303,37 +257,28 @@ function setView(mode) {
   currentPage.value = 0
 }
 
-// Flatten wine groups for grid / table views
+function isAvailable(i) {
+  return i.available !== false && !hasOutOfStockIngredient(i.ingredients)
+}
+
 const flatItems = computed(() => {
   if (!category.value) return []
-  if (category.value.type === 'wine') {
-    return items.value.flatMap(group =>
-      group.items.map(w => ({
-        id: w.name,
-        name: w.name,
-        price: w.glassPrice,
-        bottlePrice: w.bottlePrice,
-        image: w.image ?? null,
-        description: null,
-        ingredients: [],
-        tags: [],
-      }))
-    )
-  }
-  return items.value.slice().sort((a, b) => {
-    if (a.subcategory && !b.subcategory) return -1
-    if (!a.subcategory && b.subcategory) return 1
-    return 0
-  })
+  return items.value
+    .filter(isAvailable)
+    .slice()
+    .sort((a, b) => {
+      if (a.subcategory && !b.subcategory) return -1
+      if (!a.subcategory && b.subcategory) return 1
+      return 0
+    })
 })
 
-// Group spirit/cocktail items by subcategory when subcategories are present
 const subcategoryGroups = computed(() => {
-  if (category.value?.type === 'wine') return []
   if (!items.value?.length) return []
-  if (!items.value.some(i => i.subcategory)) return []
+  const available = items.value.filter(isAvailable)
+  if (!available.some(i => i.subcategory)) return []
   const groupMap = new Map()
-  for (const item of items.value) {
+  for (const item of available) {
     const key = item.subcategory || ''
     if (!groupMap.has(key)) groupMap.set(key, [])
     groupMap.get(key).push(item)
@@ -360,8 +305,6 @@ const emptySlots = computed(() => {
   const rem = pagedFlatItems.value.length % 2
   return rem === 0 ? 0 : 2 - rem
 })
-
-watch(() => route.params.id, () => { currentPage.value = 0 })
 
 // Modal
 const selectedItem = ref(null)

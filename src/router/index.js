@@ -17,7 +17,7 @@ const routes = [
 export default createRouter({
   history: createWebHashHistory(),
   routes,
-  scrollBehavior() {
-    return { top: 0 }
+  scrollBehavior(to, from) {
+    if (to.path !== from.path) return { top: 0 }
   },
 })

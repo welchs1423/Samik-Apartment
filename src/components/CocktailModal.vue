@@ -37,7 +37,7 @@
                   <span v-for="tag in item.tags" :key="tag" class="modal-tag">{{ tag }}</span>
                 </div>
 
-                <template v-if="item.ingredients?.length">
+                <template v-if="multiIngredient && item.ingredients?.length">
                   <div class="modal-sep"></div>
                   <p class="modal-section">Ingredients</p>
                   <ul class="modal-ings">
@@ -64,6 +64,7 @@ const props = defineProps({
   item: { type: Object, default: null },
   category: { type: String, default: '' },
   categoryName: { type: String, default: '' },
+  multiIngredient: { type: Boolean, default: false },
 })
 const emit = defineEmits(['close'])
 

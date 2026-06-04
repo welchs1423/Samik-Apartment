@@ -68,13 +68,17 @@
       "subcategory": "Liqueur Base",
       "price": null,
       "description": null,
-      "ingredients": [],
+      "ingredients": [
+        "Midori",
+        "Sweet and Sour Mix"
+      ],
       "tags": [
         "Liqueur",
         "Sweet",
         "Sour"
       ],
-      "image": "/images/1780556796160.png"
+      "image": "/images/1780556796160.png",
+      "available": true
     },
     {
       "id": "Black Russian",

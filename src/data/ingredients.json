@@ -1,0 +1,16 @@
+[
+  {
+    "id": "1780559501793",
+    "name": "Sweet and Sour Mix",
+    "available": true
+  },
+  {
+    "id": "1780560205993",
+    "name": "Vodka"
+  },
+  {
+    "id": "1780560210878",
+    "name": "Midori",
+    "available": false
+  }
+]

@@ -77,11 +77,6 @@
             </div>
           </div>
 
-          <!-- Wine hint -->
-          <div v-if="isWineCat" class="type-hint">
-            Items are grouped by subcategory. Each row is an individual wine.
-          </div>
-
           <!-- ── Subcategory management ── -->
           <div class="subcat-mgmt">
             <div class="subcat-mgmt-header">
@@ -110,10 +105,15 @@
                 <span class="row-name">{{ item.name }}</span>
                 <span v-if="item._subcategory" class="subcat-badge">{{ item._subcategory }}</span>
                 <span v-if="item.price" class="row-price">{{ item.price }}</span>
-                <span v-if="item.bottlePrice" class="row-price" style="opacity:.7;">btl. {{ item.bottlePrice }}</span>
                 <span v-if="item.description" class="row-desc">{{ item.description }}</span>
+                <span v-if="item._available" class="stock-badge stock-in">Available</span>
+                <span v-if="item.available === false" class="stock-badge stock-hold">On Hold</span>
+                <span v-if="item.available !== false && !item._available" class="stock-badge stock-out">Missing Ingredient</span>
               </div>
               <div class="row-actions">
+                <button type="button" class="btn-sm" @click="toggleAvailable(item)">
+                  {{ item.available !== false ? 'Hold' : 'Release' }}
+                </button>
                 <button class="btn-sm" @click="openEditItemModal(item)">Edit</button>
                 <button class="btn-sm btn-danger" @click="confirmDeleteItem(item)">Delete</button>
               </div>
@@ -123,6 +123,35 @@
         </template>
 
         <p v-else class="empty-msg" style="margin-top:1rem;">Select a category above.</p>
+      </section>
+
+      <!-- ════ SECTION 3: INGREDIENTS ════ -->
+      <section id="ingredients-section" class="admin-section">
+        <div class="section-head">
+          <h3 class="section-title">Ingredients</h3>
+          <button class="btn-gold" @click="openAddIngredientModal">+ Add Ingredient</button>
+        </div>
+        <p class="admin-note" style="margin-bottom:1rem;">
+          Used for ingredient autocomplete when adding items to multi-ingredient categories.
+        </p>
+
+        <div class="admin-table">
+          <div v-for="ing in ingredients" :key="ing.id" class="table-row">
+            <div class="row-main">
+              <span class="row-name">{{ ing.name }}</span>
+              <span class="stock-badge" :class="ing.available !== false ? 'stock-in' : 'stock-out'">
+                {{ ing.available !== false ? 'In Stock' : 'Out of Stock' }}
+              </span>
+            </div>
+            <div class="row-actions">
+              <button type="button" class="btn-sm" @click="toggleIngredientAvailable(ing.id)">
+                {{ ing.available !== false ? 'Mark Out' : 'Mark In' }}
+              </button>
+              <button class="btn-sm btn-danger" @click="confirmDeleteIngredient(ing.id)">Delete</button>
+            </div>
+          </div>
+          <p v-if="ingredients.length === 0" class="empty-msg">No ingredients yet.</p>
+        </div>
       </section>
 
     </div>
@@ -149,6 +178,10 @@
         <label class="field">
           <span class="field-label">Note</span>
           <textarea v-model="catForm.note" class="admin-input" rows="2" placeholder="Serving note shown on category page"></textarea>
+        </label>
+        <label class="field" style="flex-direction:row; align-items:center; gap:0.6rem; cursor:pointer;">
+          <input type="checkbox" v-model="catForm.multiIngredient" />
+          <span class="field-label" style="margin:0;">복수 재료 카테고리 (칵테일 등)</span>
         </label>
         <div class="field">
           <span class="field-label">Cover Image</span>
@@ -179,66 +212,90 @@
       <h3 class="modal-title">{{ editingItem ? 'Edit Item' : 'Add Item' }}</h3>
 
       <div class="form-fields">
-        <!-- Name — all types -->
+        <!-- Name -->
         <label class="field">
           <span class="field-label">Name *</span>
-          <input v-model="itemForm.name" class="admin-input" placeholder="e.g. Cabernet Sauvignon" />
+          <input v-model="itemForm.name" class="admin-input" placeholder="e.g. Manhattan" />
         </label>
 
-        <!-- Cocktail: ID slug -->
-        <label v-if="!isWineCat" class="field">
+        <!-- ID slug (non-multiIngredient only, for spirits) -->
+        <label v-if="!selectedCat.multiIngredient" class="field">
+          <span class="field-label">ID (slug)</span>
+          <input v-model="itemForm.id" class="admin-input" placeholder="e.g. basil-hayden" :disabled="!!editingItem" />
+        </label>
+
+        <!-- ID slug (multiIngredient, required) -->
+        <label v-if="selectedCat.multiIngredient" class="field">
           <span class="field-label">ID (slug) *</span>
           <input v-model="itemForm.id" class="admin-input" placeholder="e.g. manhattan" :disabled="!!editingItem" />
         </label>
 
-        <!-- Subcategory — all types (required for wine, optional otherwise) -->
+        <!-- Subcategory -->
         <label class="field">
-          <span class="field-label">Subcategory{{ isWineCat ? ' *' : '' }}</span>
+          <span class="field-label">Subcategory</span>
           <input v-model="itemForm.subcategory" class="admin-input"
-            :placeholder="isWineCat ? 'e.g. Red, White, House' : 'e.g. Blanco, Reposado (optional)'"
+            placeholder="e.g. Classic, Blanco (optional)"
             list="subcat-list" />
           <datalist id="subcat-list">
             <option v-for="s in existingSubcategories" :key="s" :value="s" />
           </datalist>
         </label>
 
-        <!-- Wine: glass / bottle price -->
-        <template v-if="isWineCat">
-          <label class="field">
-            <span class="field-label">Glass Price</span>
-            <input v-model="itemForm.glassPrice" class="admin-input" placeholder="e.g. $8.25" />
-          </label>
-          <label class="field">
-            <span class="field-label">Bottle Price</span>
-            <input v-model="itemForm.bottlePrice" class="admin-input" placeholder="e.g. $30" />
-          </label>
-        </template>
-
-        <!-- Cocktail / Spirit: generic price -->
-        <label v-if="!isWineCat" class="field">
+        <!-- Price -->
+        <label class="field">
           <span class="field-label">Price</span>
           <input v-model="itemForm.price" class="admin-input" placeholder="e.g. $9.25" />
         </label>
 
-        <!-- Description — all types -->
+        <!-- Description -->
         <label class="field">
           <span class="field-label">Description</span>
           <textarea v-model="itemForm.description" class="admin-input" rows="3" placeholder="Flavor notes..."></textarea>
         </label>
 
-        <!-- Ingredients, tags — cocktail / spirit only -->
-        <template v-if="!isWineCat">
-          <label class="field">
-            <span class="field-label">Ingredients (one per line)</span>
-            <textarea v-model="itemForm.ingredientsRaw" class="admin-input" rows="4" placeholder="Bourbon 60ml&#10;Sweet vermouth 30ml"></textarea>
-          </label>
-          <label class="field">
-            <span class="field-label">Tags (comma-separated)</span>
-            <input v-model="itemForm.tagsRaw" class="admin-input" placeholder="Classic, Strong, Stirred" />
-          </label>
-        </template>
+        <!-- Ingredients (multiIngredient only) -->
+        <div v-if="selectedCat.multiIngredient" class="field">
+          <span class="field-label">Ingredients *</span>
+          <div class="ing-wrap">
+            <div class="ing-input-row">
+              <input
+                v-model="ingredientInput"
+                class="admin-input"
+                placeholder="e.g. Bourbon 60ml"
+                autocomplete="off"
+                @keydown.enter.prevent="commitIngredientInput"
+                @focus="showIngSuggestions = true"
+                @blur="hideIngSuggestions"
+              />
+              <button class="btn-sm" type="button" @mousedown.prevent="commitIngredientInput">Add</button>
+            </div>
+            <!-- Suggestions dropdown -->
+            <div v-if="showIngSuggestions && ingredientSuggestions.length" class="ing-suggestions">
+              <button
+                v-for="name in ingredientSuggestions"
+                :key="name"
+                class="ing-suggestion"
+                type="button"
+                @mousedown.prevent="selectIngredientSuggestion(name)"
+              >{{ name }}</button>
+            </div>
+            <!-- Added ingredients list -->
+            <div v-if="itemForm.ingredients.length" class="ing-tags">
+              <span v-for="(ing, i) in itemForm.ingredients" :key="i" class="ing-tag">
+                {{ ing }}
+                <button type="button" class="ing-tag-remove" @click="removeIngredientFromForm(i)">×</button>
+              </span>
+            </div>
+          </div>
+        </div>
 
-        <!-- Image upload — all types -->
+        <!-- Tags -->
+        <label class="field">
+          <span class="field-label">Tags (comma-separated)</span>
+          <input v-model="itemForm.tagsRaw" class="admin-input" placeholder="Classic, Strong, Stirred" />
+        </label>
+
+        <!-- Image upload -->
         <div class="field">
           <span class="field-label">Image</span>
           <div class="image-upload-area">
@@ -271,11 +328,7 @@
       <div class="form-fields">
         <label class="field">
           <span class="field-label">Name *</span>
-          <input v-model="subcatForm.name" class="admin-input" placeholder="e.g. Red, Blanco, Reposado" />
-        </label>
-        <label v-if="isWineCat" class="field">
-          <span class="field-label">Note</span>
-          <input v-model="subcatForm.note" class="admin-input" placeholder="e.g. By the glass & bottle" />
+          <input v-model="subcatForm.name" class="admin-input" placeholder="e.g. Classic, Liqueur Base" />
         </label>
       </div>
       <p v-if="subcatFormError" class="form-error">{{ subcatFormError }}</p>
@@ -285,11 +338,31 @@
       </div>
     </div>
   </div>
+
+  <!-- ════ INGREDIENT MODAL ════ -->
+  <div v-if="showIngredientModal" class="modal-overlay" @mousedown.self="closeIngredientModal">
+    <div class="modal-box">
+      <h3 class="modal-title">Add Ingredient</h3>
+      <div class="form-fields">
+        <label class="field">
+          <span class="field-label">Name *</span>
+          <input v-model="ingredientForm.name" class="admin-input" placeholder="e.g. Bourbon, Sweet Vermouth" />
+          <span class="field-hint">Name only. Used for autocomplete in the item form.</span>
+        </label>
+      </div>
+      <p v-if="ingredientFormError" class="form-error">{{ ingredientFormError }}</p>
+      <div class="modal-actions">
+        <button class="btn-outline" @click="closeIngredientModal">Cancel</button>
+        <button class="btn-save" @click="saveIngredientForm">Save</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useMenuData } from '../composables/useMenuData'
+import { useIngredients } from '../composables/useIngredients'
 
 // ── Auth ──────────────────────────────────────────────
 const ADMIN_PASSWORD = '181108'
@@ -314,6 +387,7 @@ function tryLogin() {
 
 // ── Data ──────────────────────────────────────────────
 const { categories, getItems, setItems, saveCategory, deleteCategory, saveItem, deleteItem } = useMenuData()
+const { ingredients, ingredientNames, addIngredient, deleteIngredient, toggleIngredientAvailable, hasOutOfStockIngredient } = useIngredients()
 
 function slugify(s) {
   return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -324,11 +398,11 @@ const showCatModal = ref(false)
 const editingCat = ref(null)
 const catFormError = ref('')
 const catImageWarning = ref('')
-const catForm = ref({ id: '', name: '', description: '', note: '', coverImage: null })
+const catForm = ref({ id: '', name: '', description: '', note: '', coverImage: null, multiIngredient: false })
 
 function openAddCatModal() {
   editingCat.value = null
-  catForm.value = { id: '', name: '', description: '', note: '', coverImage: null }
+  catForm.value = { id: '', name: '', description: '', note: '', coverImage: null, multiIngredient: false }
   catFormError.value = ''
   catImageWarning.value = ''
   showCatModal.value = true
@@ -336,7 +410,14 @@ function openAddCatModal() {
 
 function openEditCatModal(cat) {
   editingCat.value = cat
-  catForm.value = { id: cat.id, name: cat.name, description: cat.description ?? '', note: cat.note ?? '', coverImage: cat.coverImage ?? null }
+  catForm.value = {
+    id: cat.id,
+    name: cat.name,
+    description: cat.description ?? '',
+    note: cat.note ?? '',
+    coverImage: cat.coverImage ?? null,
+    multiIngredient: cat.multiIngredient ?? false,
+  }
   catFormError.value = ''
   catImageWarning.value = ''
   showCatModal.value = true
@@ -370,7 +451,7 @@ function saveCategoryForm() {
   const payload = {
     id: catForm.value.id.trim(),
     name: catForm.value.name.trim(),
-    type: editingCat.value?.type ?? 'cocktail',
+    multiIngredient: catForm.value.multiIngredient ?? false,
     description: catForm.value.description.trim() || null,
     coverImage: catForm.value.coverImage ?? null,
   }
@@ -392,74 +473,23 @@ function confirmDeleteCategory(id) {
 const selectedCatId = ref(null)
 const selectedCat = computed(() => categories.value.find(c => c.id === selectedCatId.value) ?? null)
 
-const isWineCat    = computed(() => selectedCat.value?.type === 'wine')
-const isSpiritCat  = computed(() => selectedCat.value?.type === 'spirit')
-const isCocktailCat = computed(() => selectedCat.value?.type === 'cocktail')
-
-// Normalize raw items into a flat display list regardless of source structure
 const displayItems = computed(() => {
   if (!selectedCatId.value) return []
   const raw = getItems(selectedCatId.value)
-  if (!raw || !raw.length) return []
-
-  if (isWineCat.value) {
-    // Wine: grouped structure {subcategory, items[], note?}
-    if ('subcategory' in raw[0]) {
-      return raw.flatMap(group =>
-        (group.items ?? []).map(wine => ({
-          _key: `${group.subcategory}::${wine.name}`,
-          _subcategory: group.subcategory,
-          _groupNote: group.note,
-          _isWine: true,
-          id: `${group.subcategory}::${wine.name}`,
-          name: wine.name,
-          price: wine.glassPrice ?? null,
-          bottlePrice: wine.bottlePrice ?? null,
-          image: wine.image ?? null,
-          description: wine.description ?? null,
-          ingredients: wine.ingredients ?? [],
-          tags: wine.tags ?? [],
-          _initial: (wine.name || '?').charAt(0),
-        }))
-      )
-    }
-    // Flat wine items (added by admin)
-    return raw.map(item => ({
-      ...item,
-      _key: item.id ?? slugify(item.name ?? ''),
-      _subcategory: item.subcategory ?? '',
-      _isWine: true,
-      _initial: (item.name || '?').charAt(0),
-    }))
-  }
-
-  if (isSpiritCat.value) {
-    return raw.map(item => ({
-      ...item,
-      _key: item.id ?? slugify(item.name ?? ''),
-      id: item.id ?? slugify(item.name ?? ''),
-      _subcategory: item.subcategory ?? '',
-      _initial: (item.name || '?').charAt(0),
-    }))
-  }
-
-  // Cocktail
+  if (!raw?.length) return []
   return raw.map(item => ({
     ...item,
     _key: item.id ?? slugify(item.name ?? ''),
+    id: item.id ?? slugify(item.name ?? ''),
     _subcategory: item.subcategory ?? '',
     _initial: (item.name || '?').charAt(0),
+    _available: item.available !== false && !hasOutOfStockIngredient(item.ingredients),
   }))
 })
 
-// Existing subcategories (used for datalist + subcategory management)
 const existingSubcategories = computed(() => {
   if (!selectedCatId.value) return []
   const raw = getItems(selectedCatId.value)
-  if (isWineCat.value) {
-    return [...new Set((raw || []).map(g => g.subcategory).filter(Boolean))]
-  }
-  // Spirit/cocktail: union of category.subcategories[] + subcategories found on items
   const stored = selectedCat.value?.subcategories ?? []
   const fromItems = (raw || []).map(i => i.subcategory).filter(Boolean)
   return [...new Set([...stored, ...fromItems])]
@@ -467,25 +497,20 @@ const existingSubcategories = computed(() => {
 
 // ── Subcategory management ─────────────────────────────
 const showSubcatModal = ref(false)
-const editingSubcat = ref(null)   // null = add, string = editing this name
-const subcatForm = ref({ name: '', note: '' })
+const editingSubcat = ref(null)
+const subcatForm = ref({ name: '' })
 const subcatFormError = ref('')
 
 function openAddSubcatModal() {
   editingSubcat.value = null
-  subcatForm.value = { name: '', note: '' }
+  subcatForm.value = { name: '' }
   subcatFormError.value = ''
   showSubcatModal.value = true
 }
 
 function openEditSubcatModal(name) {
   editingSubcat.value = name
-  let note = ''
-  if (isWineCat.value) {
-    const raw = getItems(selectedCatId.value)
-    note = (raw || []).find(g => g.subcategory === name)?.note ?? ''
-  }
-  subcatForm.value = { name, note }
+  subcatForm.value = { name }
   subcatFormError.value = ''
   showSubcatModal.value = true
 }
@@ -497,61 +522,66 @@ function saveSubcatForm() {
   if (!newName) { subcatFormError.value = 'Name is required.'; return }
 
   if (editingSubcat.value === null) {
-    // Add
     if (existingSubcategories.value.includes(newName)) { subcatFormError.value = 'Already exists.'; return }
-    if (isWineCat.value) {
-      const groups = JSON.parse(JSON.stringify(getItems(selectedCatId.value) || []))
-      const newGroup = { subcategory: newName, items: [] }
-      if (subcatForm.value.note.trim()) newGroup.note = subcatForm.value.note.trim()
-      groups.push(newGroup)
-      setItems(selectedCatId.value, groups)
-    } else {
-      const cat = { ...selectedCat.value }
-      cat.subcategories = [...(cat.subcategories ?? []), newName]
-      saveCategory(cat)
-    }
+    const cat = { ...selectedCat.value }
+    cat.subcategories = [...(cat.subcategories ?? []), newName]
+    saveCategory(cat)
   } else {
-    // Edit / rename
     const oldName = editingSubcat.value
     if (oldName !== newName && existingSubcategories.value.includes(newName)) { subcatFormError.value = 'Already exists.'; return }
-    if (isWineCat.value) {
-      const groups = JSON.parse(JSON.stringify(getItems(selectedCatId.value) || []))
-      const group = groups.find(g => g.subcategory === oldName)
-      if (group) {
-        group.subcategory = newName
-        if (subcatForm.value.note.trim()) group.note = subcatForm.value.note.trim()
-        else delete group.note
-      }
-      setItems(selectedCatId.value, groups)
-    } else {
-      const cat = { ...selectedCat.value }
-      cat.subcategories = (cat.subcategories ?? []).map(s => s === oldName ? newName : s)
-      saveCategory(cat)
-      const raw = JSON.parse(JSON.stringify(getItems(selectedCatId.value) || []))
-      raw.forEach(item => { if (item.subcategory === oldName) item.subcategory = newName })
-      setItems(selectedCatId.value, raw)
-    }
+    const cat = { ...selectedCat.value }
+    cat.subcategories = (cat.subcategories ?? []).map(s => s === oldName ? newName : s)
+    saveCategory(cat)
+    const raw = JSON.parse(JSON.stringify(getItems(selectedCatId.value) || []))
+    raw.forEach(item => { if (item.subcategory === oldName) item.subcategory = newName })
+    setItems(selectedCatId.value, raw)
   }
   closeSubcatModal()
 }
 
 function confirmDeleteSubcat(name) {
-  if (isWineCat.value) {
-    const groups = getItems(selectedCatId.value) || []
-    const count = groups.find(g => g.subcategory === name)?.items?.length ?? 0
-    if (!confirm(`"${name}" 서브카테고리를 삭제합니다${count > 0 ? ` (포함된 아이템 ${count}개도 삭제됨)` : ''}.`)) return
-    setItems(selectedCatId.value, JSON.parse(JSON.stringify(groups.filter(g => g.subcategory !== name))))
-  } else {
-    const raw = getItems(selectedCatId.value) || []
-    const count = raw.filter(i => i.subcategory === name).length
-    if (!confirm(`"${name}" 서브카테고리를 삭제합니다${count > 0 ? ` (아이템 ${count}개의 분류가 해제됨)` : ''}.`)) return
-    const cat = { ...selectedCat.value }
-    cat.subcategories = (cat.subcategories ?? []).filter(s => s !== name)
-    saveCategory(cat)
-    const newRaw = JSON.parse(JSON.stringify(raw))
-    newRaw.forEach(item => { if (item.subcategory === name) delete item.subcategory })
-    setItems(selectedCatId.value, newRaw)
+  const raw = getItems(selectedCatId.value) || []
+  const count = raw.filter(i => i.subcategory === name).length
+  if (!confirm(`"${name}" 서브카테고리를 삭제합니다${count > 0 ? ` (아이템 ${count}개의 분류가 해제됨)` : ''}.`)) return
+  const cat = { ...selectedCat.value }
+  cat.subcategories = (cat.subcategories ?? []).filter(s => s !== name)
+  saveCategory(cat)
+  const newRaw = JSON.parse(JSON.stringify(raw))
+  newRaw.forEach(item => { if (item.subcategory === name) delete item.subcategory })
+  setItems(selectedCatId.value, newRaw)
+}
+
+// ── Ingredient autocomplete (item form) ───────────────
+const ingredientInput = ref('')
+const showIngSuggestions = ref(false)
+
+const ingredientSuggestions = computed(() => {
+  const q = ingredientInput.value.trim().toLowerCase()
+  if (!q) return []
+  return ingredientNames.value.filter(n => n.toLowerCase().includes(q)).slice(0, 8)
+})
+
+function selectIngredientSuggestion(name) {
+  ingredientInput.value = name + ' '
+  showIngSuggestions.value = false
+}
+
+function hideIngSuggestions() {
+  setTimeout(() => { showIngSuggestions.value = false }, 150)
+}
+
+function commitIngredientInput() {
+  const val = ingredientInput.value.trim()
+  if (!val) return
+  if (!itemForm.value.ingredients.includes(val)) {
+    itemForm.value.ingredients.push(val)
   }
+  ingredientInput.value = ''
+  showIngSuggestions.value = false
+}
+
+function removeIngredientFromForm(idx) {
+  itemForm.value.ingredients.splice(idx, 1)
 }
 
 // ── Item modal ────────────────────────────────────────
@@ -560,13 +590,13 @@ const editingItem = ref(null)
 const itemFormError = ref('')
 const imageWarning = ref('')
 const itemForm = ref({
-  id: '', name: '', price: '', description: '', ingredientsRaw: '', tagsRaw: '', image: null,
-  subcategory: '', glassPrice: '', bottlePrice: '',
+  id: '', name: '', price: '', description: '', ingredients: [], tagsRaw: '', image: null, subcategory: '',
 })
 
 function openAddItemModal() {
   editingItem.value = null
-  itemForm.value = { id: '', name: '', price: '', description: '', ingredientsRaw: '', tagsRaw: '', image: null, subcategory: '', glassPrice: '', bottlePrice: '' }
+  itemForm.value = { id: '', name: '', price: '', description: '', ingredients: [], tagsRaw: '', image: null, subcategory: '' }
+  ingredientInput.value = ''
   itemFormError.value = ''
   imageWarning.value = ''
   showItemModal.value = true
@@ -579,13 +609,12 @@ function openEditItemModal(displayItem) {
     name: displayItem.name ?? '',
     price: displayItem.price ?? '',
     description: displayItem.description ?? '',
-    ingredientsRaw: (displayItem.ingredients ?? []).join('\n'),
+    ingredients: [...(displayItem.ingredients ?? [])],
     tagsRaw: (displayItem.tags ?? []).join(', '),
     image: displayItem.image ?? null,
     subcategory: displayItem._subcategory ?? '',
-    glassPrice: displayItem.price ?? '',
-    bottlePrice: displayItem.bottlePrice ?? '',
   }
+  ingredientInput.value = ''
   itemFormError.value = ''
   imageWarning.value = ''
   showItemModal.value = true
@@ -611,127 +640,126 @@ async function handleImageUpload(e) {
 
 function saveItemForm() {
   if (!itemForm.value.name.trim()) { itemFormError.value = 'Name is required.'; return }
-  if (isWineCat.value) return saveWineItemForm()
-  if (isSpiritCat.value) return saveSpiritItemForm()
-  saveCocktailItemForm()
-}
 
-function saveWineItemForm() {
-  if (!itemForm.value.subcategory.trim()) { itemFormError.value = 'Subcategory is required.'; return }
+  if (selectedCat.value?.multiIngredient) {
+    if (!itemForm.value.id.trim()) { itemFormError.value = 'ID is required.'; return }
+    if (itemForm.value.ingredients.length === 0) { itemFormError.value = 'At least one ingredient is required.'; return }
 
-  const groups = JSON.parse(JSON.stringify(getItems(selectedCatId.value) || []))
-  const newSubcat = itemForm.value.subcategory.trim()
-  const newWine = { name: itemForm.value.name.trim() }
-  if (itemForm.value.glassPrice.trim()) newWine.glassPrice = itemForm.value.glassPrice.trim()
-  if (itemForm.value.bottlePrice.trim()) newWine.bottlePrice = itemForm.value.bottlePrice.trim()
-  if (itemForm.value.image) newWine.image = itemForm.value.image
-  if (itemForm.value.description.trim()) newWine.description = itemForm.value.description.trim()
-  const wineIngs = itemForm.value.ingredientsRaw.split('\n').map(s => s.trim()).filter(Boolean)
-  if (wineIngs.length) newWine.ingredients = wineIngs
-  const wineTags = itemForm.value.tagsRaw.split(',').map(s => s.trim()).filter(Boolean)
-  if (wineTags.length) newWine.tags = wineTags
-
-  if (editingItem.value?._isWine) {
-    const [origSubcat, origName] = editingItem.value.id.split('::')
-    const origGroup = groups.find(g => g.subcategory === origSubcat)
-    if (origGroup) {
-      const wineIdx = origGroup.items.findIndex(w => w.name === origName)
-      if (wineIdx !== -1) {
-        if (origSubcat === newSubcat) {
-          // 같은 subcategory: 제자리 업데이트 → 순서 유지, 사라지지 않음
-          origGroup.items[wineIdx] = newWine
-          setItems(selectedCatId.value, groups)
-          closeItemModal()
-          return
-        }
-        origGroup.items.splice(wineIdx, 1)
-        if (origGroup.items.length === 0) groups.splice(groups.indexOf(origGroup), 1)
+    // Validate ingredients against master list
+    const unrecognized = itemForm.value.ingredients.filter(
+      ing => !ingredientNames.value.some(n => ing.toLowerCase().startsWith(n.toLowerCase()))
+    )
+    if (unrecognized.length > 0) {
+      const names = unrecognized.map(ing => ing.split(' ')[0]).join(', ')
+      const goAdd = confirm(`These ingredients are not in the master list: ${names}\n\nGo to Ingredients to add them?`)
+      if (goAdd) {
+        closeItemModal()
+        document.getElementById('ingredients-section')?.scrollIntoView({ behavior: 'smooth' })
+        return
+      }
+      itemForm.value.ingredients = itemForm.value.ingredients.filter(
+        ing => ingredientNames.value.some(n => ing.toLowerCase().startsWith(n.toLowerCase()))
+      )
+      if (itemForm.value.ingredients.length === 0) {
+        itemFormError.value = 'No valid ingredients. Please add ingredients to the list first.'
+        return
       }
     }
+
+    const payload = {
+      id: itemForm.value.id.trim(),
+      name: itemForm.value.name.trim(),
+      subcategory: itemForm.value.subcategory.trim() || null,
+      price: itemForm.value.price.trim() || null,
+      description: itemForm.value.description.trim() || null,
+      ingredients: itemForm.value.ingredients,
+      tags: itemForm.value.tagsRaw.split(',').map(s => s.trim()).filter(Boolean),
+      image: itemForm.value.image || null,
+    }
+    if (!editingItem.value) {
+      const existing = getItems(selectedCatId.value)
+      if (existing.some(i => i.id === payload.id)) { itemFormError.value = 'An item with this ID already exists.'; return }
+    }
+    saveItem(selectedCatId.value, payload)
+    closeItemModal()
+    return
   }
 
-  let targetGroup = groups.find(g => g.subcategory === newSubcat)
-  if (!targetGroup) {
-    targetGroup = { subcategory: newSubcat, items: [] }
-    groups.push(targetGroup)
-  }
-  targetGroup.items.push(newWine)
-
-  setItems(selectedCatId.value, groups)
-  closeItemModal()
-}
-
-function saveSpiritItemForm() {
+  // Single-ingredient category (spirits etc.)
   const raw = JSON.parse(JSON.stringify(getItems(selectedCatId.value) || []))
   const payload = { name: itemForm.value.name.trim() }
+  if (itemForm.value.id.trim()) payload.id = itemForm.value.id.trim()
   if (itemForm.value.subcategory.trim()) payload.subcategory = itemForm.value.subcategory.trim()
   if (itemForm.value.price.trim()) payload.price = itemForm.value.price.trim()
   if (itemForm.value.image) payload.image = itemForm.value.image
   if (itemForm.value.description.trim()) payload.description = itemForm.value.description.trim()
-  const spiritIngs = itemForm.value.ingredientsRaw.split('\n').map(s => s.trim()).filter(Boolean)
-  if (spiritIngs.length) payload.ingredients = spiritIngs
-  const spiritTags = itemForm.value.tagsRaw.split(',').map(s => s.trim()).filter(Boolean)
-  if (spiritTags.length) payload.tags = spiritTags
+  const tags = itemForm.value.tagsRaw.split(',').map(s => s.trim()).filter(Boolean)
+  if (tags.length) payload.tags = tags
 
   if (editingItem.value) {
-    const originalName = editingItem.value.name
-    const idx = raw.findIndex(i => i.name === originalName)
+    const idx = raw.findIndex(i => i.name === editingItem.value.name)
     if (idx !== -1) raw[idx] = payload
     else raw.push(payload)
   } else {
-    if (raw.some(i => i.name === payload.name)) {
-      itemFormError.value = 'A spirit with this name already exists.'
-      return
-    }
+    if (raw.some(i => i.name === payload.name)) { itemFormError.value = 'An item with this name already exists.'; return }
     raw.push(payload)
   }
   setItems(selectedCatId.value, raw)
   closeItemModal()
 }
 
-function saveCocktailItemForm() {
-  if (!itemForm.value.id.trim()) { itemFormError.value = 'ID is required.'; return }
-
-  const payload = {
-    id: itemForm.value.id.trim(),
-    name: itemForm.value.name.trim(),
-    subcategory: itemForm.value.subcategory.trim() || null,
-    price: itemForm.value.price.trim() || null,
-    description: itemForm.value.description.trim() || null,
-    ingredients: itemForm.value.ingredientsRaw.split('\n').map(s => s.trim()).filter(Boolean),
-    tags: itemForm.value.tagsRaw.split(',').map(s => s.trim()).filter(Boolean),
-    image: itemForm.value.image || null,
+function toggleAvailable(displayItem) {
+  const list = getItems(selectedCatId.value)
+  if (!list) return
+  const item = list.find(i => {
+    if (i.id && displayItem.id) return i.id === displayItem.id
+    return i.name === displayItem.name
+  })
+  if (item) {
+    item.available = item.available === false ? true : false
+    setItems(selectedCatId.value, list)
   }
-
-  if (!editingItem.value) {
-    const existing = getItems(selectedCatId.value)
-    if (existing.some(i => i.id === payload.id)) {
-      itemFormError.value = 'An item with this ID already exists.'
-      return
-    }
-  }
-
-  saveItem(selectedCatId.value, payload)
-  closeItemModal()
 }
 
 function confirmDeleteItem(displayItem) {
   if (!confirm('Delete this item?')) return
-
-  if (isWineCat.value && displayItem._isWine) {
-    const groups = JSON.parse(JSON.stringify(getItems(selectedCatId.value) || []))
-    const [subcat, name] = displayItem.id.split('::')
-    const group = groups.find(g => g.subcategory === subcat)
-    if (group) {
-      group.items = group.items.filter(w => w.name !== name)
-      if (group.items.length === 0) groups.splice(groups.indexOf(group), 1)
-    }
-    setItems(selectedCatId.value, groups)
-  } else if (isSpiritCat.value) {
+  if (selectedCat.value?.multiIngredient) {
+    deleteItem(selectedCatId.value, displayItem.id)
+  } else {
     const raw = getItems(selectedCatId.value).filter(i => i.name !== displayItem.name)
     setItems(selectedCatId.value, raw)
-  } else {
-    deleteItem(selectedCatId.value, displayItem.id)
+  }
+}
+
+// ── Ingredients section ───────────────────────────────
+const showIngredientModal = ref(false)
+const ingredientFormError = ref('')
+const ingredientForm = ref({ name: '' })
+
+function openAddIngredientModal() {
+  ingredientForm.value = { name: '' }
+  ingredientFormError.value = ''
+  showIngredientModal.value = true
+}
+
+function closeIngredientModal() { showIngredientModal.value = false }
+
+function saveIngredientForm() {
+  if (!ingredientForm.value.name.trim()) { ingredientFormError.value = 'Name is required.'; return }
+  const trimmed = ingredientForm.value.name.trim()
+  if (ingredientNames.value.some(n => n.toLowerCase() === trimmed.toLowerCase())) {
+    ingredientFormError.value = 'Ingredient already exists.'
+    return
+  }
+  addIngredient(trimmed)
+  closeIngredientModal()
+}
+
+function confirmDeleteIngredient(id) {
+  const ing = ingredients.value.find(i => i.id === id)
+  if (!ing) return
+  if (confirm(`Delete ingredient "${ing.name}"?`)) {
+    deleteIngredient(id)
   }
 }
 </script>
@@ -917,14 +945,6 @@ function confirmDeleteItem(displayItem) {
 }
 .btn-group { display: flex; gap: 0.5rem; }
 
-.type-hint {
-  font-family: 'Lato', system-ui, sans-serif;
-  font-size: 0.65rem;
-  color: #6B6460;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.6rem;
-}
-
 /* Table */
 .admin-table { border: 1px solid #2E2823; }
 .table-row {
@@ -963,7 +983,6 @@ function confirmDeleteItem(displayItem) {
   font-size: 0.7rem;
   color: #C5A880;
 }
-
 .subcat-badge {
   font-family: 'Lato', system-ui, sans-serif;
   font-size: 0.54rem;
@@ -974,6 +993,18 @@ function confirmDeleteItem(displayItem) {
   color: #C58080;
   flex-shrink: 0;
 }
+.stock-badge {
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.54rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.12rem 0.45rem;
+  border: 1px solid;
+  flex-shrink: 0;
+}
+.stock-in   { border-color: #3A5A3A; color: #7AC57A; }
+.stock-out  { border-color: #5A3A3A; color: #C57A7A; }
+.stock-hold { border-color: #5A4A2A; color: #C5A87A; }
 
 /* ── Subcategory management ── */
 .subcat-mgmt {
@@ -1170,7 +1201,6 @@ function confirmDeleteItem(displayItem) {
 }
 .admin-input:focus { border-color: #C5A880; }
 .admin-input:disabled { opacity: 0.45; cursor: not-allowed; }
-select.admin-input { cursor: pointer; }
 
 /* Image upload */
 .image-upload-area { display: flex; flex-direction: column; gap: 0.6rem; }
@@ -1243,6 +1273,65 @@ select.admin-input { cursor: pointer; }
   transition: all 0.18s;
 }
 .btn-save:hover { background: #D4B990; border-color: #D4B990; }
+
+/* Ingredient autocomplete */
+.ing-wrap { display: flex; flex-direction: column; gap: 0.5rem; position: relative; }
+.ing-input-row { display: flex; gap: 0.5rem; }
+.ing-input-row .admin-input { flex: 1; }
+.ing-suggestions {
+  position: absolute;
+  top: calc(2.2rem + 0.5rem);
+  left: 0;
+  right: 4rem;
+  background: #1A1613;
+  border: 1px solid #C5A880;
+  z-index: 10;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+.ing-suggestion {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.45rem 0.75rem;
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: #EAE6DF;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #2E2823;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.ing-suggestion:last-child { border-bottom: none; }
+.ing-suggestion:hover { background: rgba(197,168,128,0.12); }
+.ing-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.ing-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: #EAE6DF;
+  background: rgba(197,168,128,0.08);
+  border: 1px solid #2E2823;
+  padding: 0.2rem 0.5rem 0.2rem 0.6rem;
+}
+.ing-tag-remove {
+  background: none;
+  border: none;
+  color: #6B6460;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0;
+  transition: color 0.12s;
+}
+.ing-tag-remove:hover { color: #C57A7A; }
 
 @media (max-width: 500px) {
   .admin-inner { padding: 2.5rem 1rem 3rem; }

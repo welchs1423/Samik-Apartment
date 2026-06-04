@@ -2,24 +2,24 @@
   {
     "id": "bourbon",
     "name": "Bourbon",
-    "type": "spirit",
     "description": "American whiskey",
     "coverImage": null,
-    "note": "All Bourbons & Ryes served with a king cube. Keeps your drink cold without watering down your beverage."
+    "note": "All Bourbons & Ryes served with a king cube. Keeps your drink cold without watering down your beverage.",
+    "multiIngredient": false
   },
   {
     "id": "rye-whiskey",
     "name": "Straight Rye Whiskey",
-    "type": "spirit",
     "description": "Spicy American rye",
     "coverImage": null,
-    "note": "All Bourbons & Ryes served with a king cube. Keeps your drink cold without watering down your beverage."
+    "note": "All Bourbons & Ryes served with a king cube. Keeps your drink cold without watering down your beverage.",
+    "multiIngredient": false
   },
   {
     "id": "cocktails",
     "name": "Cocktails",
-    "type": "cocktail",
     "description": "Shaken, not stirred",
-    "coverImage": "/images/1780549807563.png"
+    "coverImage": "/images/1780549807563.png",
+    "multiIngredient": true
   }
 ]
