@@ -388,7 +388,7 @@ function tryLogin() {
 
 // ── Data ──────────────────────────────────────────────
 const { categories, getItems, setItems, saveCategory, deleteCategory, saveItem, deleteItem } = useMenuData()
-const { ingredients, ingredientNames, addIngredient, deleteIngredient, toggleIngredientAvailable, hasOutOfStockIngredient } = useIngredients()
+const { ingredients, ingredientNames, effectiveIngredientNames, addIngredient, deleteIngredient, toggleIngredientAvailable, hasOutOfStockIngredient } = useIngredients()
 
 function slugify(s) {
   return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -556,10 +556,11 @@ function confirmDeleteSubcat(name) {
 const ingredientInput = ref('')
 const showIngSuggestions = ref(false)
 
+
 const ingredientSuggestions = computed(() => {
   const q = ingredientInput.value.trim().toLowerCase()
   if (!q) return []
-  return ingredientNames.value.filter(n => n.toLowerCase().includes(q)).slice(0, 8)
+  return effectiveIngredientNames.value.filter(n => n.toLowerCase().includes(q)).slice(0, 8)
 })
 
 function selectIngredientSuggestion(name) {
@@ -648,7 +649,7 @@ function saveItemForm() {
 
     // Validate ingredients against master list
     const unrecognized = itemForm.value.ingredients.filter(
-      ing => !ingredientNames.value.some(n => ing.toLowerCase().startsWith(n.toLowerCase()))
+      ing => !effectiveIngredientNames.value.some(n => ing.toLowerCase().startsWith(n.toLowerCase()))
     )
     if (unrecognized.length > 0) {
       const names = unrecognized.map(ing => ing.split(' ')[0]).join(', ')

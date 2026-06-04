@@ -1,4 +1,5 @@
 import { reactive, computed } from 'vue'
+import { useMenuData } from './useMenuData'
 
 const state = reactive({ ingredients: [] })
 
@@ -16,8 +17,30 @@ function persist() {
 }
 
 export function useIngredients() {
+  const { categories, getItems } = useMenuData()
+
   const ingredients = computed(() => state.ingredients)
   const ingredientNames = computed(() => state.ingredients.map(i => i.name))
+
+  // Master list + available items from non-multiIngredient categories (spirits, etc.)
+  const effectiveIngredientNames = computed(() => {
+    const seen = new Set()
+    const result = []
+    for (const name of ingredientNames.value) {
+      const key = name.toLowerCase()
+      if (!seen.has(key)) { seen.add(key); result.push(name) }
+    }
+    for (const cat of categories.value) {
+      if (cat.multiIngredient) continue
+      for (const item of getItems(cat.id)) {
+        if (item.available !== false && item.name) {
+          const key = item.name.toLowerCase()
+          if (!seen.has(key)) { seen.add(key); result.push(item.name) }
+        }
+      }
+    }
+    return result
+  })
 
   function addIngredient(name) {
     const trimmed = name.trim()
@@ -43,13 +66,20 @@ export function useIngredients() {
 
   function hasOutOfStockIngredient(itemIngredients) {
     if (!itemIngredients?.length) return false
-    return itemIngredients.some(itemIng =>
-      state.ingredients.some(master =>
-        master.available === false &&
-        itemIng.toLowerCase().startsWith(master.name.toLowerCase())
-      )
-    )
+    return itemIngredients.some(ingName => {
+      const lower = ingName.toLowerCase()
+      // Check explicit master list
+      const masterMatch = state.ingredients.find(m => lower.startsWith(m.name.toLowerCase()))
+      if (masterMatch?.available === false) return true
+      // Check single-ingredient category items
+      for (const cat of categories.value) {
+        if (cat.multiIngredient) continue
+        const item = getItems(cat.id).find(i => i.name && lower.startsWith(i.name.toLowerCase()))
+        if (item?.available === false) return true
+      }
+      return false
+    })
   }
 
-  return { ingredients, ingredientNames, addIngredient, deleteIngredient, toggleIngredientAvailable, hasOutOfStockIngredient }
+  return { ingredients, ingredientNames, effectiveIngredientNames, addIngredient, deleteIngredient, toggleIngredientAvailable, hasOutOfStockIngredient }
 }
