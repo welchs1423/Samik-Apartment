@@ -265,6 +265,7 @@
                 autocomplete="off"
                 @keydown.enter.prevent="commitIngredientInput"
                 @focus="showIngSuggestions = true"
+                @input="showIngSuggestions = true"
                 @blur="hideIngSuggestions"
               />
               <button class="btn-sm" type="button" @mousedown.prevent="commitIngredientInput">Add</button>

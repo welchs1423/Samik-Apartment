@@ -95,6 +95,21 @@
         "Coffee"
       ],
       "image": "/images/1780556571917.png"
+    },
+    {
+      "id": "Bikini Martini",
+      "name": "Bikini Martini",
+      "subcategory": "Gin Base",
+      "price": null,
+      "description": null,
+      "ingredients": [
+        "Gin",
+        "Blue Curacao",
+        "Peach Schnaps",
+        "Lemon Juice"
+      ],
+      "tags": [],
+      "image": "/images/1780584019537.png"
     }
   ]
 }

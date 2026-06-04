@@ -17,5 +17,21 @@
     "id": "1780561358243",
     "name": "Kahlua",
     "available": true
+  },
+  {
+    "id": "1780583969129",
+    "name": "Gin"
+  },
+  {
+    "id": "1780583975853",
+    "name": "Lemon Juice"
+  },
+  {
+    "id": "1780583982064",
+    "name": "Blue Curacao"
+  },
+  {
+    "id": "1780583987592",
+    "name": "Peach Schnaps"
   }
 ]
