@@ -261,7 +261,7 @@
               <input
                 v-model="ingredientInput"
                 class="admin-input"
-                placeholder="e.g. Bourbon 60ml"
+                placeholder="e.g. Bourbon"
                 autocomplete="off"
                 @keydown.enter.prevent="commitIngredientInput"
                 @focus="showIngSuggestions = true"
@@ -562,8 +562,8 @@ const ingredientSuggestions = computed(() => {
 })
 
 function selectIngredientSuggestion(name) {
-  ingredientInput.value = name + ' '
-  showIngSuggestions.value = false
+  ingredientInput.value = name
+  commitIngredientInput()
 }
 
 function hideIngSuggestions() {

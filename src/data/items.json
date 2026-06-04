@@ -86,7 +86,10 @@
       "subcategory": "Vodka Base",
       "price": null,
       "description": null,
-      "ingredients": [],
+      "ingredients": [
+        "Vodka",
+        "Kahlua"
+      ],
       "tags": [
         "Vodka",
         "Coffee"
