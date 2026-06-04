@@ -28,6 +28,11 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
   res.json({ path: `/images/${req.file.filename}` })
 })
 
+app.get('/api/data/categories', (req, res) => {
+  const data = fs.readFileSync(path.join(dataDir, 'categories.json'), 'utf8')
+  res.json(JSON.parse(data))
+})
+
 app.post('/api/data/categories', (req, res) => {
   const categories = req.body
   if (!Array.isArray(categories)) return res.status(400).json({ error: 'Invalid data' })
@@ -35,22 +40,15 @@ app.post('/api/data/categories', (req, res) => {
   res.json({ ok: true })
 })
 
-app.post('/api/data/items/:catId', (req, res) => {
-  const { catId } = req.params
-  if (!/^[a-z0-9-]+$/.test(catId)) return res.status(400).json({ error: 'Invalid catId' })
-  const items = req.body
-  if (!Array.isArray(items)) return res.status(400).json({ error: 'Invalid data' })
-  const itemsDir = path.join(dataDir, 'items')
-  if (!fs.existsSync(itemsDir)) fs.mkdirSync(itemsDir, { recursive: true })
-  fs.writeFileSync(path.join(itemsDir, `${catId}.json`), JSON.stringify(items, null, 2))
-  res.json({ ok: true })
+app.get('/api/data/items', (req, res) => {
+  const data = fs.readFileSync(path.join(dataDir, 'items.json'), 'utf8')
+  res.json(JSON.parse(data))
 })
 
-app.delete('/api/data/items/:catId', (req, res) => {
-  const { catId } = req.params
-  if (!/^[a-z0-9-]+$/.test(catId)) return res.status(400).json({ error: 'Invalid catId' })
-  const filePath = path.join(dataDir, 'items', `${catId}.json`)
-  if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+app.post('/api/data/items', (req, res) => {
+  const items = req.body
+  if (typeof items !== 'object' || Array.isArray(items)) return res.status(400).json({ error: 'Invalid data' })
+  fs.writeFileSync(path.join(dataDir, 'items.json'), JSON.stringify(items, null, 2))
   res.json({ ok: true })
 })
 

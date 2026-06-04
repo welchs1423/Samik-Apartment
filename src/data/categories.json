@@ -16,7 +16,7 @@
     "note": "All Bourbons & Ryes served with a king cube. Keeps your drink cold without watering down your beverage."
   },
   {
-    "id": "Cocktails",
+    "id": "cocktails",
     "name": "Cocktails",
     "type": "cocktail",
     "description": "Shaken, not stirred",

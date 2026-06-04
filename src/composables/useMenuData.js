@@ -1,11 +1,19 @@
 import { reactive, computed } from 'vue'
-import categoriesJson from '../data/categories.json'
 
-const itemModules = import.meta.glob('../data/items/*.json', { eager: true })
-const sourceItems = {}
-for (const path in itemModules) {
-  const key = path.replace('../data/items/', '').replace('.json', '')
-  sourceItems[key] = itemModules[path].default ?? itemModules[path]
+const state = reactive({
+  categories: [],
+  itemsCache: {},
+})
+
+export async function initMenuData() {
+  const [catsRes, itemsRes] = await Promise.all([
+    fetch('/api/data/categories'),
+    fetch('/api/data/items'),
+  ])
+  const cats = await catsRes.json()
+  const items = await itemsRes.json()
+  state.categories = cats
+  Object.assign(state.itemsCache, items)
 }
 
 function persist(url, method, data) {
@@ -17,13 +25,8 @@ function persist(url, method, data) {
   fetch(url, opts).catch(err => console.error('[menu] persist error:', err))
 }
 
-const state = reactive({
-  categories: JSON.parse(JSON.stringify(categoriesJson)),
-  itemsCache: {},
-})
-
-for (const catId of Object.keys(sourceItems)) {
-  state.itemsCache[catId] = JSON.parse(JSON.stringify(sourceItems[catId]))
+function persistItems() {
+  persist('/api/data/items', 'POST', JSON.parse(JSON.stringify(state.itemsCache)))
 }
 
 export function useMenuData() {
@@ -31,14 +34,14 @@ export function useMenuData() {
 
   function getItems(catId) {
     if (!state.itemsCache[catId]) {
-      state.itemsCache[catId] = JSON.parse(JSON.stringify(sourceItems[catId] ?? []))
+      state.itemsCache[catId] = []
     }
     return state.itemsCache[catId]
   }
 
   function setItems(catId, items) {
     state.itemsCache[catId] = items
-    persist(`/api/data/items/${catId}`, 'POST', items)
+    persistItems()
   }
 
   function saveCategory(cat) {
@@ -48,17 +51,17 @@ export function useMenuData() {
     } else {
       state.categories.push({ ...cat })
       state.itemsCache[cat.id] = []
-      persist(`/api/data/items/${cat.id}`, 'POST', [])
     }
     persist('/api/data/categories', 'POST', JSON.parse(JSON.stringify(state.categories)))
+    persistItems()
   }
 
   function deleteCategory(id) {
     const idx = state.categories.findIndex(c => c.id === id)
     if (idx !== -1) state.categories.splice(idx, 1)
-    persist('/api/data/categories', 'POST', JSON.parse(JSON.stringify(state.categories)))
-    persist(`/api/data/items/${id}`, 'DELETE')
     delete state.itemsCache[id]
+    persist('/api/data/categories', 'POST', JSON.parse(JSON.stringify(state.categories)))
+    persistItems()
   }
 
   function saveItem(catId, item) {
@@ -69,14 +72,14 @@ export function useMenuData() {
     } else {
       list.push({ ...item })
     }
-    persist(`/api/data/items/${catId}`, 'POST', JSON.parse(JSON.stringify(list)))
+    persistItems()
   }
 
   function deleteItem(catId, itemId) {
     const list = getItems(catId)
     const idx = list.findIndex(i => i.id === itemId)
     if (idx !== -1) list.splice(idx, 1)
-    persist(`/api/data/items/${catId}`, 'POST', JSON.parse(JSON.stringify(list)))
+    persistItems()
   }
 
   return {
