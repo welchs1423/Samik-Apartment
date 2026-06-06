@@ -1,64 +1,20 @@
 {
   "bourbon": [
     {
-      "name": "Basil Hayden 8yr"
-    },
-    {
-      "name": "Bulleit"
-    },
-    {
-      "name": "Elijah Craig"
-    },
-    {
-      "name": "Jefferson's"
-    },
-    {
-      "name": "Jim Beam"
-    },
-    {
-      "name": "Michter's Kentucky"
-    },
-    {
-      "name": "Whistle Pig"
-    },
-    {
-      "name": "Knob Creek"
-    },
-    {
-      "name": "Larceny"
-    },
-    {
-      "name": "Old Forester"
-    },
-    {
-      "name": "Woodford Reserve"
-    },
-    {
-      "name": "Wild Turkey 81"
-    },
-    {
       "name": "Russel's Reserve 10yo",
+      "id": "russel-s-reserve-10yo",
+      "subcategory": "Bourbon",
       "image": "/images/1780362072455.png"
-    }
-  ],
-  "rye-whiskey": [
-    {
-      "name": "Redemption Rye"
     },
     {
-      "name": "Woodford Reserve Straight"
-    },
-    {
-      "name": "Michter's Straight Rye"
-    },
-    {
-      "name": "George Dickel Rye"
-    },
-    {
-      "name": "Bulleit Straight Rye 95"
-    },
-    {
-      "name": "Knob Creek Rye Whiskey"
+      "name": "Jack Daniels Single Barrel Barrel Strength",
+      "id": "Jack Daniels Single Barrel Barrel Strength",
+      "subcategory": "Tennessee Whiskey",
+      "image": "/images/1780587322392.png",
+      "tags": [
+        "Strong",
+        "CS"
+      ]
     }
   ],
   "cocktails": [
