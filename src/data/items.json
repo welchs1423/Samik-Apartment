@@ -1,4 +1,12 @@
 {
+  "scotch": [
+    {
+      "name": "Lagavulin 16yo",
+      "id": "Lagavulin 16yo",
+      "subcategory": "Islay",
+      "image": "/images/1780748624388.png"
+    }
+  ],
   "bourbon": [
     {
       "name": "Russel's Reserve 10yo",

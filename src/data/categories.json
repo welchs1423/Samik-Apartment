@@ -1,5 +1,12 @@
 [
   {
+    "id": "scotch",
+    "name": "Scotch Whisky",
+    "multiIngredient": false,
+    "description": "Single Malts & Blends from Scotland",
+    "coverImage": "/images/1780748760945.png"
+  },
+  {
     "id": "bourbon",
     "name": "American Whiskey",
     "multiIngredient": false,

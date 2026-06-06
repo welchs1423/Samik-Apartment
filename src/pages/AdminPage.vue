@@ -186,14 +186,24 @@
         <div class="field">
           <span class="field-label">Cover Image</span>
           <div class="image-upload-area">
-            <div v-if="catForm.coverImage" class="image-preview">
-              <img :src="catForm.coverImage" alt="Preview" class="preview-img" />
-              <button class="remove-img-btn" @click="catForm.coverImage = null" title="Remove">✕</button>
+            <div v-if="pendingCatImagePreview" class="image-preview">
+              <img :src="pendingCatImagePreview" alt="Preview" class="preview-img" />
             </div>
-            <label class="upload-btn">
-              {{ catForm.coverImage ? 'Replace Image' : 'Choose Image' }}
-              <input type="file" accept="image/*" class="file-input" @change="handleCategoryImageUpload" />
-            </label>
+            <div v-if="pendingCatImagePreview" class="image-confirm-actions">
+              <span class="image-confirm-label">이 이미지를 사용하시겠습니까?</span>
+              <button class="btn-sm" type="button" @click="confirmCatImageUpload">확인</button>
+              <button class="btn-sm btn-danger" type="button" @click="cancelCatImageUpload">취소</button>
+            </div>
+            <template v-else>
+              <div v-if="catForm.coverImage" class="image-preview">
+                <img :src="catForm.coverImage" alt="Preview" class="preview-img" />
+                <button class="remove-img-btn" @click="catForm.coverImage = null" title="Remove">✕</button>
+              </div>
+              <label class="upload-btn">
+                {{ catForm.coverImage ? 'Replace Image' : 'Choose Image' }}
+                <input type="file" accept="image/*" class="file-input" @change="handleCategoryImageUpload" />
+              </label>
+            </template>
             <p v-if="catImageWarning" class="image-warning">{{ catImageWarning }}</p>
           </div>
         </div>
@@ -300,14 +310,24 @@
         <div class="field">
           <span class="field-label">Image</span>
           <div class="image-upload-area">
-            <div v-if="itemForm.image" class="image-preview">
-              <img :src="itemForm.image" alt="Preview" class="preview-img" />
-              <button class="remove-img-btn" @click="itemForm.image = null" title="Remove">✕</button>
+            <div v-if="pendingItemImagePreview" class="image-preview">
+              <img :src="pendingItemImagePreview" alt="Preview" class="preview-img" />
             </div>
-            <label class="upload-btn">
-              {{ itemForm.image ? 'Replace Image' : 'Choose Image' }}
-              <input type="file" accept="image/*" class="file-input" @change="handleImageUpload" />
-            </label>
+            <div v-if="pendingItemImagePreview" class="image-confirm-actions">
+              <span class="image-confirm-label">이 이미지를 사용하시겠습니까?</span>
+              <button class="btn-sm" type="button" @click="confirmItemImageUpload">확인</button>
+              <button class="btn-sm btn-danger" type="button" @click="cancelItemImageUpload">취소</button>
+            </div>
+            <template v-else>
+              <div v-if="itemForm.image" class="image-preview">
+                <img :src="itemForm.image" alt="Preview" class="preview-img" />
+                <button class="remove-img-btn" @click="itemForm.image = null" title="Remove">✕</button>
+              </div>
+              <label class="upload-btn">
+                {{ itemForm.image ? 'Replace Image' : 'Choose Image' }}
+                <input type="file" accept="image/*" class="file-input" @change="handleImageUpload" />
+              </label>
+            </template>
             <p v-if="imageWarning" class="image-warning">{{ imageWarning }}</p>
           </div>
         </div>
@@ -399,6 +419,8 @@ const showCatModal = ref(false)
 const editingCat = ref(null)
 const catFormError = ref('')
 const catImageWarning = ref('')
+const pendingCatImageFile = ref(null)
+const pendingCatImagePreview = ref(null)
 const catForm = ref({ id: '', name: '', description: '', note: '', coverImage: null, multiIngredient: false })
 
 function openAddCatModal() {
@@ -406,6 +428,7 @@ function openAddCatModal() {
   catForm.value = { id: '', name: '', description: '', note: '', coverImage: null, multiIngredient: false }
   catFormError.value = ''
   catImageWarning.value = ''
+  cancelCatImageUpload()
   showCatModal.value = true
 }
 
@@ -421,17 +444,30 @@ function openEditCatModal(cat) {
   }
   catFormError.value = ''
   catImageWarning.value = ''
+  cancelCatImageUpload()
   showCatModal.value = true
 }
 
-function closeCatModal() { showCatModal.value = false }
+function closeCatModal() {
+  cancelCatImageUpload()
+  showCatModal.value = false
+}
 
-async function handleCategoryImageUpload(e) {
+function handleCategoryImageUpload(e) {
   const file = e.target.files[0]
   if (!file) return
   catImageWarning.value = ''
+  if (pendingCatImagePreview.value) URL.revokeObjectURL(pendingCatImagePreview.value)
+  pendingCatImageFile.value = file
+  pendingCatImagePreview.value = URL.createObjectURL(file)
+  e.target.value = ''
+}
+
+async function confirmCatImageUpload() {
+  if (!pendingCatImageFile.value) return
+  catImageWarning.value = ''
   const formData = new FormData()
-  formData.append('image', file)
+  formData.append('image', pendingCatImageFile.value)
   try {
     const res = await fetch('/api/upload', { method: 'POST', body: formData })
     const data = await res.json()
@@ -439,7 +475,15 @@ async function handleCategoryImageUpload(e) {
   } catch {
     catImageWarning.value = '이미지 업로드에 실패했습니다.'
   }
-  e.target.value = ''
+  URL.revokeObjectURL(pendingCatImagePreview.value)
+  pendingCatImageFile.value = null
+  pendingCatImagePreview.value = null
+}
+
+function cancelCatImageUpload() {
+  if (pendingCatImagePreview.value) URL.revokeObjectURL(pendingCatImagePreview.value)
+  pendingCatImageFile.value = null
+  pendingCatImagePreview.value = null
 }
 
 function saveCategoryForm() {
@@ -591,6 +635,8 @@ const showItemModal = ref(false)
 const editingItem = ref(null)
 const itemFormError = ref('')
 const imageWarning = ref('')
+const pendingItemImageFile = ref(null)
+const pendingItemImagePreview = ref(null)
 const itemForm = ref({
   id: '', name: '', price: '', description: '', ingredients: [], tagsRaw: '', image: null, subcategory: '',
 })
@@ -601,6 +647,7 @@ function openAddItemModal() {
   ingredientInput.value = ''
   itemFormError.value = ''
   imageWarning.value = ''
+  cancelItemImageUpload()
   showItemModal.value = true
 }
 
@@ -619,17 +666,30 @@ function openEditItemModal(displayItem) {
   ingredientInput.value = ''
   itemFormError.value = ''
   imageWarning.value = ''
+  cancelItemImageUpload()
   showItemModal.value = true
 }
 
-function closeItemModal() { showItemModal.value = false }
+function closeItemModal() {
+  cancelItemImageUpload()
+  showItemModal.value = false
+}
 
-async function handleImageUpload(e) {
+function handleImageUpload(e) {
   const file = e.target.files[0]
   if (!file) return
   imageWarning.value = ''
+  if (pendingItemImagePreview.value) URL.revokeObjectURL(pendingItemImagePreview.value)
+  pendingItemImageFile.value = file
+  pendingItemImagePreview.value = URL.createObjectURL(file)
+  e.target.value = ''
+}
+
+async function confirmItemImageUpload() {
+  if (!pendingItemImageFile.value) return
+  imageWarning.value = ''
   const formData = new FormData()
-  formData.append('image', file)
+  formData.append('image', pendingItemImageFile.value)
   try {
     const res = await fetch('/api/upload', { method: 'POST', body: formData })
     const data = await res.json()
@@ -637,7 +697,15 @@ async function handleImageUpload(e) {
   } catch {
     imageWarning.value = '이미지 업로드에 실패했습니다.'
   }
-  e.target.value = ''
+  URL.revokeObjectURL(pendingItemImagePreview.value)
+  pendingItemImageFile.value = null
+  pendingItemImagePreview.value = null
+}
+
+function cancelItemImageUpload() {
+  if (pendingItemImagePreview.value) URL.revokeObjectURL(pendingItemImagePreview.value)
+  pendingItemImageFile.value = null
+  pendingItemImagePreview.value = null
 }
 
 function saveItemForm() {
@@ -1249,6 +1317,18 @@ function confirmDeleteIngredient(id) {
 }
 .upload-btn:hover { border-color: #C5A880; color: #C5A880; }
 .file-input { display: none; }
+.image-confirm-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.image-confirm-label {
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.65rem;
+  color: #C8C2B8;
+  flex: 1;
+}
 .image-warning {
   font-family: 'Lato', system-ui, sans-serif;
   font-size: 0.65rem;
