@@ -4,7 +4,8 @@
     "name": "Scotch Whisky",
     "multiIngredient": false,
     "description": "Single Malts & Blends from Scotland",
-    "coverImage": "/images/1780748760945.png"
+    "coverImage": "/images/1780748760945.png",
+    "subcategories": []
   },
   {
     "id": "bourbon",

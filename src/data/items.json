@@ -3,7 +3,7 @@
     {
       "name": "Lagavulin 16yo",
       "id": "Lagavulin 16yo",
-      "subcategory": "Islay",
+      "subcategory": "Island",
       "image": "/images/1780748624388.png",
       "available": true
     },
@@ -11,7 +11,13 @@
       "name": "Johnnie Walker Double Black",
       "id": "Johnnie Walker Double Black",
       "subcategory": "Blended",
-      "image": "/images/1780837937099.png"
+      "image": "/images/1780840316237.png"
+    },
+    {
+      "name": "Talisker Storm",
+      "id": "Talisker Storm",
+      "subcategory": "Island",
+      "image": "/images/1780839909060.png"
     }
   ],
   "bourbon": [
