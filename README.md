@@ -63,15 +63,15 @@ server.js                       # 개발용 Express 서버 (port 3001)
 - 모든 아이템 클릭 시 상세 팝업 (이름, 설명, 재료, 태그, 이미지)
 - `available: false` 아이템은 공개 메뉴에서 자동 숨김
 
-### 어드민 (`/admin`, dev 전용)
-- `npm run dev` 실행 시에만 접근 가능 (프로덕션 빌드에서 완전 제외)
+### 어드민 (`/admin`)
 - 비밀번호 인증 (세션 유지)
 - **카테고리** 추가 / 수정 / 삭제 + 커버 이미지 업로드 + `multiIngredient` 설정
-- **아이템** 추가 / 수정 / 삭제 — 이름, 설명, 재료(autocomplete), 태그, 이미지, 서브카테고리
-- **재고 관리** — 아이템 목록에서 Available / Unavailable 뱃지 표시 + Mark Out/In 토글
-- **재료 관리** — 재료 마스터 목록 추가 / 삭제; 아이템 폼에서 autocomplete 소스로 사용
-- 변경사항은 **즉시 `src/data/` JSON 파일에 반영** (서버 재시작 없이 Vite HMR로 즉시 적용)
-- 이미지는 `public/images/`에 업로드되며 경로가 아이템에 자동 저장
+- **아이템** 추가 / 수정 / 삭제 — 이름, 설명, 재료(autocomplete), 레시피, 태그, 이미지, 서브카테고리
+- **레시피** — 칵테일 카테고리 아이템 목록에 Recipe 버튼; 클릭 시 레시피 팝업 표시 / 아이템 편집에서 자유형식 텍스트로 작성
+- **재고 관리** — 아이템 Hold/Release 토글, Available/On Hold/Missing Ingredient 뱃지 자동 표시
+- **재료 관리** — 마스터 재료 목록 + 단일재료 카테고리 아이템(스피릿 등) 통합 표시 / Mark Out·In 재고 관리 / 칵테일 아이템 폼 재료 autocomplete 소스
+- 변경사항은 **즉시 `src/data/` JSON 파일에 반영**
+- 이미지 업로드: 파일 선택 후 Save 클릭만으로 자동 업로드 + 경로 저장 (dev 환경 전용 — Vercel 배포본에서는 업로드 버튼 미표시)
 
 ## 콘텐츠 업데이트 워크플로우
 
@@ -133,10 +133,14 @@ server.js                       # 개발용 Express 서버 (port 3001)
 ### ingredients.json
 
 ```json
-["Bourbon", "Sweet Vermouth", "Angostura Bitters"]
+[
+  { "id": "1234567890", "name": "Sweet and Sour Mix", "available": true },
+  { "id": "1234567891", "name": "Midori", "available": false }
+]
 ```
 
-어드민 아이템 폼의 재료 autocomplete 소스로 사용되는 평면 배열.
+마스터 재료 목록. `available: false`면 해당 재료를 사용하는 칵테일에 "Missing Ingredient" 표시.  
+단일재료 카테고리 아이템(스피릿 등)은 자동으로 autocomplete 소스에 포함되므로 중복 등록 불필요.
 
 ## 개발 서버 구성
 
@@ -180,6 +184,7 @@ npm run preview # 빌드 결과 로컬 미리보기
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-06-07 | 칵테일 아이템 Recipe 버튼 + 레시피 팝업 / 아이템 편집에 레시피 텍스트 필드 추가 / Ingredients 섹션에 단일재료 카테고리 아이템 통합 표시 및 재고 관리 / 이미지 업로드 Vercel 배포본에서 자동 숨김 / Save 시 pending 이미지 자동 업로드 / 칵테일 카드 이미지 1:1 비율 + contain |
 | 2026-06-04 | 재료 재고-메뉴 연동 (available 토글, 공개 메뉴 자동 필터) / 재료 마스터 목록 + 어드민 재료 관리 섹션 + 아이템 폼 autocomplete / 아이템 데이터 단일 파일(`items.json`)로 통합 및 서버 fetch 방식으로 전환 / `type` 필드 제거 → `multiIngredient` 플래그로 대체 |
 | 2026-06-04 | 카테고리 커버 이미지 업로드 기능 추가 / Cocktails 카테고리 추가 및 구조 정리 / localStorage 제거 → Express API 서버로 직접 JSON 파일 저장 방식으로 전환 |
 | 2026-05-28 | 어드민 로컬 전용 전환, 이미지 git 직접 관리 / 카드 썸네일 이미지 표시, 서브카테고리 우선 정렬, 리스트/테이블 뷰 스타일 통일 / 어드민 개선, 메뉴 전체 검색, 상세팝업 전면 개방, 서브카테고리 관리 UI |

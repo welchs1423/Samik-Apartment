@@ -4,7 +4,14 @@
       "name": "Lagavulin 16yo",
       "id": "Lagavulin 16yo",
       "subcategory": "Islay",
-      "image": "/images/1780748624388.png"
+      "image": "/images/1780748624388.png",
+      "available": true
+    },
+    {
+      "name": "Johnnie Walker Double Black",
+      "id": "Johnnie Walker Double Black",
+      "subcategory": "Blended",
+      "image": "/images/1780837937099.png"
     }
   ],
   "bourbon": [
@@ -36,13 +43,13 @@
         "Midori",
         "Sweet and Sour Mix"
       ],
+      "recipe": "1. 잔에 미도리 30 ml와 스윗 앤 사워 믹스 30ml를 부어주고, 잘 섞어준다.\n2. 레몬 웨지로 가니쉬해준다.",
       "tags": [
         "Liqueur",
         "Sweet",
         "Sour"
       ],
-      "image": "/images/1780556796160.png",
-      "available": true
+      "image": "/images/1780556796160.png"
     },
     {
       "id": "Black Russian",
@@ -54,6 +61,7 @@
         "Vodka",
         "Kahlua"
       ],
+      "recipe": "1. 잔에 얼음을 채우고 보드카 50ml, 커피리큐르 20ml를 부어준다. 이후 잘 저어주면 완성. 가니쉬는 따로 없다.",
       "tags": [
         "Vodka",
         "Coffee"
@@ -72,8 +80,23 @@
         "Peach Schnaps",
         "Lemon Juice"
       ],
+      "recipe": "1. 진 60ml, 블루 큐라소 22.5ml, 피치트리 7.5ml, 레몬 주스 7.5ml, 찬물 10ml를 얼음과 셰이킹한다.\n2. 거름망으로 걸러서 차가운 잔에 따라준다\n3. 오렌지 제스트 가니시",
       "tags": [],
       "image": "/images/1780584019537.png"
+    },
+    {
+      "id": "Black Watch",
+      "name": "Black Watch",
+      "subcategory": "Whisky Base",
+      "price": null,
+      "description": null,
+      "ingredients": [
+        "Johnnie Walker Double Black",
+        "Kahlua"
+      ],
+      "recipe": "1. 쉐이커에 얼음, 조니워커 더블블랙 45ml, 커피 리큐르 15ml를 넣고 잘 저어준다\n2. 잔에 크고 동그란 얼음을 1개 넣고 쉐이커 안의 얼음은 걸러내고 준비된 칵테일을 잔에 부어준다.\n3. 레몬이 있으면 레몬 필로 향을 내주고 가니시 장식한다",
+      "tags": [],
+      "image": "/images/1780838649303.png"
     }
   ]
 }

@@ -111,6 +111,7 @@
                 <span v-if="item.available !== false && !item._available" class="stock-badge stock-out">Missing Ingredient</span>
               </div>
               <div class="row-actions">
+                <button v-if="selectedCat.multiIngredient" type="button" class="btn-sm btn-recipe" @click="openRecipe(item)">Recipe</button>
                 <button type="button" class="btn-sm" @click="toggleAvailable(item)">
                   {{ item.available !== false ? 'Hold' : 'Release' }}
                 </button>
@@ -152,6 +153,27 @@
           </div>
           <p v-if="ingredients.length === 0" class="empty-msg">No ingredients yet.</p>
         </div>
+
+        <!-- Spirit items from single-ingredient categories -->
+        <div v-if="spiritItems.length" class="ing-spirit-section">
+          <p class="ing-spirit-label">메뉴 아이템 (단일재료 카테고리)</p>
+          <div class="admin-table">
+            <div v-for="item in spiritItems" :key="item._catId + '::' + item.name" class="table-row">
+              <div class="row-main">
+                <span class="row-name">{{ item.name }}</span>
+                <span class="subcat-badge">{{ item._catName }}</span>
+                <span class="stock-badge" :class="item.available !== false ? 'stock-in' : 'stock-out'">
+                  {{ item.available !== false ? 'In Stock' : 'On Hold' }}
+                </span>
+              </div>
+              <div class="row-actions">
+                <button type="button" class="btn-sm" @click="toggleSpiritAvailable(item._catId, item)">
+                  {{ item.available !== false ? 'Mark Out' : 'Mark In' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
     </div>
@@ -186,25 +208,32 @@
         <div class="field">
           <span class="field-label">Cover Image</span>
           <div class="image-upload-area">
-            <div v-if="pendingCatImagePreview" class="image-preview">
-              <img :src="pendingCatImagePreview" alt="Preview" class="preview-img" />
-            </div>
-            <div v-if="pendingCatImagePreview" class="image-confirm-actions">
-              <span class="image-confirm-label">이 이미지를 사용하시겠습니까?</span>
-              <button class="btn-sm" type="button" @click="confirmCatImageUpload">확인</button>
-              <button class="btn-sm btn-danger" type="button" @click="cancelCatImageUpload">취소</button>
-            </div>
+            <template v-if="isDev">
+              <div v-if="pendingCatImagePreview" class="image-preview">
+                <img :src="pendingCatImagePreview" alt="Preview" class="preview-img" />
+              </div>
+              <div v-if="pendingCatImagePreview" class="image-confirm-actions">
+                <span class="image-confirm-label">이 이미지를 사용하시겠습니까?</span>
+                <button class="btn-sm" type="button" @click="confirmCatImageUpload">확인</button>
+                <button class="btn-sm btn-danger" type="button" @click="cancelCatImageUpload">취소</button>
+              </div>
+              <template v-else>
+                <div v-if="catForm.coverImage" class="image-preview">
+                  <img :src="catForm.coverImage" alt="Preview" class="preview-img" />
+                  <button class="remove-img-btn" @click="catForm.coverImage = null" title="Remove">✕</button>
+                </div>
+                <label class="upload-btn">
+                  {{ catForm.coverImage ? 'Replace Image' : 'Choose Image' }}
+                  <input type="file" accept="image/*" class="file-input" @change="handleCategoryImageUpload" />
+                </label>
+              </template>
+              <p v-if="catImageWarning" class="image-warning">{{ catImageWarning }}</p>
+            </template>
             <template v-else>
               <div v-if="catForm.coverImage" class="image-preview">
                 <img :src="catForm.coverImage" alt="Preview" class="preview-img" />
-                <button class="remove-img-btn" @click="catForm.coverImage = null" title="Remove">✕</button>
               </div>
-              <label class="upload-btn">
-                {{ catForm.coverImage ? 'Replace Image' : 'Choose Image' }}
-                <input type="file" accept="image/*" class="file-input" @change="handleCategoryImageUpload" />
-              </label>
             </template>
-            <p v-if="catImageWarning" class="image-warning">{{ catImageWarning }}</p>
           </div>
         </div>
       </div>
@@ -300,6 +329,12 @@
           </div>
         </div>
 
+        <!-- Recipe (multiIngredient only) -->
+        <label v-if="selectedCat.multiIngredient" class="field">
+          <span class="field-label">Recipe</span>
+          <textarea v-model="itemForm.recipe" class="admin-input" rows="4" placeholder="Gin 45ml&#10;Sweet Vermouth 20ml&#10;Angostura Bitters 2 dashes"></textarea>
+        </label>
+
         <!-- Tags -->
         <label class="field">
           <span class="field-label">Tags (comma-separated)</span>
@@ -310,25 +345,32 @@
         <div class="field">
           <span class="field-label">Image</span>
           <div class="image-upload-area">
-            <div v-if="pendingItemImagePreview" class="image-preview">
-              <img :src="pendingItemImagePreview" alt="Preview" class="preview-img" />
-            </div>
-            <div v-if="pendingItemImagePreview" class="image-confirm-actions">
-              <span class="image-confirm-label">이 이미지를 사용하시겠습니까?</span>
-              <button class="btn-sm" type="button" @click="confirmItemImageUpload">확인</button>
-              <button class="btn-sm btn-danger" type="button" @click="cancelItemImageUpload">취소</button>
-            </div>
+            <template v-if="isDev">
+              <div v-if="pendingItemImagePreview" class="image-preview">
+                <img :src="pendingItemImagePreview" alt="Preview" class="preview-img" />
+              </div>
+              <div v-if="pendingItemImagePreview" class="image-confirm-actions">
+                <span class="image-confirm-label">이 이미지를 사용하시겠습니까?</span>
+                <button class="btn-sm" type="button" @click="confirmItemImageUpload">확인</button>
+                <button class="btn-sm btn-danger" type="button" @click="cancelItemImageUpload">취소</button>
+              </div>
+              <template v-else>
+                <div v-if="itemForm.image" class="image-preview">
+                  <img :src="itemForm.image" alt="Preview" class="preview-img" />
+                  <button class="remove-img-btn" @click="itemForm.image = null" title="Remove">✕</button>
+                </div>
+                <label class="upload-btn">
+                  {{ itemForm.image ? 'Replace Image' : 'Choose Image' }}
+                  <input type="file" accept="image/*" class="file-input" @change="handleImageUpload" />
+                </label>
+              </template>
+              <p v-if="imageWarning" class="image-warning">{{ imageWarning }}</p>
+            </template>
             <template v-else>
               <div v-if="itemForm.image" class="image-preview">
                 <img :src="itemForm.image" alt="Preview" class="preview-img" />
-                <button class="remove-img-btn" @click="itemForm.image = null" title="Remove">✕</button>
               </div>
-              <label class="upload-btn">
-                {{ itemForm.image ? 'Replace Image' : 'Choose Image' }}
-                <input type="file" accept="image/*" class="file-input" @change="handleImageUpload" />
-              </label>
             </template>
-            <p v-if="imageWarning" class="image-warning">{{ imageWarning }}</p>
           </div>
         </div>
       </div>
@@ -360,6 +402,19 @@
     </div>
   </div>
 
+  <!-- ════ RECIPE MODAL ════ -->
+  <div v-if="showRecipeModal" class="modal-overlay" @mousedown.self="closeRecipe">
+    <div class="modal-box modal-box--recipe">
+      <button class="recipe-close" @click="closeRecipe">×</button>
+      <h3 class="modal-title">{{ recipeItem?.name }}</h3>
+      <pre v-if="recipeItem?.recipe" class="recipe-text">{{ recipeItem.recipe }}</pre>
+      <ul v-else-if="recipeItem?.ingredients?.length" class="recipe-list">
+        <li v-for="ing in recipeItem.ingredients" :key="ing" class="recipe-ing">{{ ing }}</li>
+      </ul>
+      <p v-else class="empty-msg">No recipe set.</p>
+    </div>
+  </div>
+
   <!-- ════ INGREDIENT MODAL ════ -->
   <div v-if="showIngredientModal" class="modal-overlay" @mousedown.self="closeIngredientModal">
     <div class="modal-box">
@@ -384,6 +439,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useMenuData } from '../composables/useMenuData'
 import { useIngredients } from '../composables/useIngredients'
+
+// ── Env ───────────────────────────────────────────────
+const isDev = import.meta.env.DEV
 
 // ── Auth ──────────────────────────────────────────────
 const ADMIN_PASSWORD = '181108'
@@ -486,7 +544,8 @@ function cancelCatImageUpload() {
   pendingCatImagePreview.value = null
 }
 
-function saveCategoryForm() {
+async function saveCategoryForm() {
+  if (pendingCatImageFile.value) await confirmCatImageUpload()
   if (!catForm.value.name.trim()) { catFormError.value = 'Name is required.'; return }
   if (!catForm.value.id.trim()) { catFormError.value = 'ID is required.'; return }
   if (!editingCat.value && categories.value.some(c => c.id === catForm.value.id.trim())) {
@@ -512,6 +571,19 @@ function confirmDeleteCategory(id) {
     deleteCategory(id)
     if (selectedCatId.value === id) selectedCatId.value = null
   }
+}
+
+// ── Recipe modal ──────────────────────────────────────
+const showRecipeModal = ref(false)
+const recipeItem = ref(null)
+
+function openRecipe(item) {
+  recipeItem.value = item
+  showRecipeModal.value = true
+}
+function closeRecipe() {
+  showRecipeModal.value = false
+  recipeItem.value = null
 }
 
 // ── Items section ─────────────────────────────────────
@@ -638,12 +710,12 @@ const imageWarning = ref('')
 const pendingItemImageFile = ref(null)
 const pendingItemImagePreview = ref(null)
 const itemForm = ref({
-  id: '', name: '', price: '', description: '', ingredients: [], tagsRaw: '', image: null, subcategory: '',
+  id: '', name: '', price: '', description: '', ingredients: [], tagsRaw: '', image: null, subcategory: '', recipe: '',
 })
 
 function openAddItemModal() {
   editingItem.value = null
-  itemForm.value = { id: '', name: '', price: '', description: '', ingredients: [], tagsRaw: '', image: null, subcategory: '' }
+  itemForm.value = { id: '', name: '', price: '', description: '', ingredients: [], tagsRaw: '', image: null, subcategory: '', recipe: '' }
   ingredientInput.value = ''
   itemFormError.value = ''
   imageWarning.value = ''
@@ -662,6 +734,7 @@ function openEditItemModal(displayItem) {
     tagsRaw: (displayItem.tags ?? []).join(', '),
     image: displayItem.image ?? null,
     subcategory: displayItem._subcategory ?? '',
+    recipe: displayItem.recipe ?? '',
   }
   ingredientInput.value = ''
   itemFormError.value = ''
@@ -708,7 +781,8 @@ function cancelItemImageUpload() {
   pendingItemImagePreview.value = null
 }
 
-function saveItemForm() {
+async function saveItemForm() {
+  if (pendingItemImageFile.value) await confirmItemImageUpload()
   if (!itemForm.value.name.trim()) { itemFormError.value = 'Name is required.'; return }
 
   if (selectedCat.value?.multiIngredient) {
@@ -743,6 +817,7 @@ function saveItemForm() {
       price: itemForm.value.price.trim() || null,
       description: itemForm.value.description.trim() || null,
       ingredients: itemForm.value.ingredients,
+      recipe: itemForm.value.recipe.trim() || null,
       tags: itemForm.value.tagsRaw.split(',').map(s => s.trim()).filter(Boolean),
       image: itemForm.value.image || null,
     }
@@ -798,6 +873,27 @@ function confirmDeleteItem(displayItem) {
   } else {
     const raw = getItems(selectedCatId.value).filter(i => i.name !== displayItem.name)
     setItems(selectedCatId.value, raw)
+  }
+}
+
+// ── Spirit items (non-multiIngredient) shown in Ingredients section ──
+const spiritItems = computed(() => {
+  const result = []
+  for (const cat of categories.value) {
+    if (cat.multiIngredient) continue
+    for (const item of getItems(cat.id)) {
+      if (item.name) result.push({ ...item, _catId: cat.id, _catName: cat.name })
+    }
+  }
+  return result
+})
+
+function toggleSpiritAvailable(catId, item) {
+  const list = getItems(catId)
+  const target = list.find(i => (i.id && i.id === item.id) || i.name === item.name)
+  if (target) {
+    target.available = target.available === false ? true : false
+    setItems(catId, list)
   }
 }
 
@@ -1414,6 +1510,66 @@ function confirmDeleteIngredient(id) {
   transition: color 0.12s;
 }
 .ing-tag-remove:hover { color: #C57A7A; }
+
+/* Spirit items in ingredients section */
+.ing-spirit-section { margin-top: 1.5rem; }
+.ing-spirit-label {
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #6B6460;
+  margin-bottom: 0.5rem;
+}
+
+/* Recipe button */
+.btn-recipe { border-color: #3A3028; color: #A89070; }
+.btn-recipe:hover { border-color: #C5A880; color: #C5A880; }
+
+/* Recipe modal */
+.modal-box--recipe {
+  min-width: 260px;
+  max-width: 360px;
+  position: relative;
+}
+.recipe-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.9rem;
+  background: none;
+  border: none;
+  color: #6B6460;
+  font-size: 1.2rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.12s;
+}
+.recipe-close:hover { color: #C5A880; }
+.recipe-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.recipe-ing {
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.85rem;
+  color: #C8C2B8;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #2E2823;
+}
+.recipe-ing:last-child { border-bottom: none; }
+.recipe-text {
+  font-family: 'Lato', system-ui, sans-serif;
+  font-size: 0.85rem;
+  color: #C8C2B8;
+  line-height: 1.7;
+  margin: 1rem 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 
 @media (max-width: 500px) {
   .admin-inner { padding: 2.5rem 1rem 3rem; }

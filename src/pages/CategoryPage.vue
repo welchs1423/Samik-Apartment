@@ -467,14 +467,14 @@ function openModal(item) { selectedItem.value = item }
 .card-art {
   position: relative;
   width: 100%;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 1 / 1;
   background: #141210;
   overflow: hidden;
 }
 .card-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 .card-art-overlay {
   position: absolute;
